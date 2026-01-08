@@ -1,21 +1,92 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; 
+import toast from "react-hot-toast";
+import {jwtDecode} from 'jwt-decode';
+import {loginUserApi} from '../services/api';
+
+
+const navLinkStyle = {
+  margin: '0 15px',
+  color:'#2c2b2b',
+  textdecoration: 'none',
+  fontSize:'16px'
+};
 
 export default function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     role: "",
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ 
+      ...formData, 
+      [e.target.name]: e.target.value
+     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); 
-    console.log(formData); 
+
+   if (!formData.email || !formData.password || !formData.role) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const response = await loginUserApi(formData);
+      console.log("Backend Response:", response.data);
+
+      if (response.status === 200 || response.status === 201) {
+        const token = response.data.token;
+
+        if (!token) {
+          return toast.error("Login worked, but no token was received.");
+        }
+
+        localStorage.setItem("token-37c", token);
+        
+        if (response.data.user && response.data.user.id) {
+          localStorage.setItem("userId", response.data.user.id);
+        }
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        toast.success(response.data.message || "Login Successful!");
+
+        let decoded;
+        try {
+            decoded = jwtDecode(token);
+            console.log("Decoded Token Data:", decoded);
+        } catch (tokenError) {
+          console.error("JWT Decode Error:", tokenError);
+          return toast.error("Token format is invalid.");
+        }
+        setTimeout(() => {
+          const userRole = decoded.role; 
+          if (userRole === "admin") {
+            navigate("/admindashboard");
+          } else if (userRole === "user") {
+            navigate("/userdashboard");
+          } else if (userRole === "guide") {
+            navigate("/guidedashboard");
+          } else if (userRole === "travelagent") {
+            navigate("/travelagentdashboard");
+          } else {
+            navigate("/"); 
+          }
+        }, 2000);
+
+      } else {
+        toast.error(response.data.message || "Login failed");
+      }
+
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Internal Server Error";
+      toast.error(errorMessage);
+      console.error("Login Error:", error);
+    }
   };
 
   return (
@@ -33,9 +104,8 @@ export default function Login() {
         </div>
 
         <div className="flex items-center space-x-6">
-          <a href="#" className="hover:text-blue-600">Home</a>
-          <a href="#" className="hover:text-blue-600">About</a>
-         
+          <Link to="/" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>Home</Link>
+          <Link to="/about" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>About</Link>
         </div>
       </nav>
 
@@ -79,6 +149,11 @@ export default function Login() {
                 className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="••••••••"
               />
+              <div className="flex justify-end mt-1">
+              <Link to="/forgotpassword" title="Forgot Password" className="text-xs text-blue-600 hover:underline font-medium">
+                Forgot Password?
+              </Link>
+            </div>
             </div>
 
 
@@ -110,9 +185,9 @@ export default function Login() {
 
         <p className="text-center mt-6 text-gray-600 text-sm">
           Don't have an account{" "}
-          <a href="#" className="text-blue-600 font-semibold hover:underline">
+          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
             Sign Up
-          </a>
+          </Link>
         </p>
       </form>
     </div>
