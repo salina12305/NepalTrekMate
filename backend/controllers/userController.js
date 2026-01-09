@@ -28,7 +28,6 @@ const addUser = async (req, res) => {
 
         res.status(201).json({ 
             message: "User added successfully", 
-            // user: newUser.id });
             user: { id: newUser.id, email: newUser.email }
         });
     } catch (error) {
@@ -119,8 +118,6 @@ const updateUser  = async (req, res) =>{
             password: hashedPassword,
                 });
         return res.status(200).json({
-        // res.status(200).json({
-            
             message: "Users update successfully",
             users,
         });
@@ -136,29 +133,63 @@ const updateUser  = async (req, res) =>{
 
 const loginUser=async(req,res)=>{
     try{
-        const {email,password}=req.body
+        const {email,password,role}=req.body
         const user=await User.findOne({where:{email}})
         if (!user){
             return res.status(400).json({
             message: "Users not found!!"}) 
         }
+
+        if (user.role !== role) {
+            return res.status(403).json({ 
+                message: `Unauthorized. You are registered as a ${user.role}, not an ${role}.` 
+            });
+        }
+
+        if ((user.role === 'travelagent') && user.status === 'pending') {
+            return res.status(403).json({ 
+                success: false,
+                message: "Your account is pending admin approval. Please wait for verification." 
+            });
+        }
+
         const isvalidUser = await bcrypt.compare(password,user.password)
         if (!isvalidUser){
-            return res.status(400).json({message:"Invalid email or password!!"})
+            return res.status(400).json({
+                message:"Invalid email or password!!"
+            });
         }
         const token = jwt.sign(
-            {id:user.id, role:user.role, username:user.username, email:user.email},
-            process.env.JWT_SECRET,
+            {id:user.id, role:user.role, email:user.email},
+            process.env.JWT_SECRET  || "your_fallback_secret",
             { expiresIn: "7d"}
         );
-        return res.status(200).json({message:"user logged in successfully!",token})
+        return res.status(200).json({
+            success: true,
+            message:"User logged in successfully!",
+            token,
+            user: { 
+                id: user.id,
+                fullName: user.fullName, 
+                role: user.role 
+            }
+        });
     }catch(error){
-        return res.status(500).json({error:error.message})
+        console.error(error);
+        return res.status(500).json({
+            success: false, error:error.message
+        });
     }
 };
 
 module.exports={
-    getAllUsers,getActiveUsers, addUser, getUsersById, updateUser, deleteUser, loginUser
+    getAllUsers,
+    getActiveUsers, 
+    addUser, 
+    getUsersById, 
+    updateUser, 
+    deleteUser, 
+    loginUser
 
 }
 
