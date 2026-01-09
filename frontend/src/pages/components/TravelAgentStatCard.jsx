@@ -15,3 +15,5 @@ const TravelAgentStatCard = ({ label, value, icon }) => {
 };
 
 export default TravelAgentStatCard;
+
+

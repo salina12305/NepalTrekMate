@@ -28,7 +28,6 @@ const addUser = async (req, res) => {
 
         res.status(201).json({ 
             message: "User added successfully", 
-            // user: newUser.id });
             user: { id: newUser.id, email: newUser.email }
         });
     } catch (error) {
@@ -119,8 +118,6 @@ const updateUser  = async (req, res) =>{
             password: hashedPassword,
                 });
         return res.status(200).json({
-        // res.status(200).json({
-            
             message: "Users update successfully",
             users,
         });
