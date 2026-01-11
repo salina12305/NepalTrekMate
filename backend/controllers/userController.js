@@ -1,4 +1,5 @@
-const User =require("../models/usermodel")
+
+const User =require("../models/usermodel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
 
@@ -17,23 +18,51 @@ const addUser = async (req, res) => {
             return res.status(400).json({ message: "Email already in use" });
         }
 
+        if (role === "admin") {
+            const existingAdmin = await User.findOne({ where: { role: "admin" } });
+            if (existingAdmin) {
+                return res.status(400).json({
+                    message: "Admin account already exists. Only one admin is allowed."
+                });
+            }
+        }
+        const initialStatus = (role === 'travelagent') 
+            ? 'pending' 
+            : 'approved';
+
         const hashedPassword = await bcrypt.hash(password, 10);
+        console.log(hashedPassword)
         
         const newUser = await User.create({
-            username: fullName, 
+            fullName: fullName, 
             email,
             password: hashedPassword,
-            role
+            role,
+            status: initialStatus
         });
 
         res.status(201).json({ 
-            message: "User added successfully", 
-            user: { id: newUser.id, email: newUser.email }
+            success: true,
+            id: newUser.id,
+            message: "User registered! Now upload your photo."
         });
+        const successMessage = (initialStatus === 'pending')
+            ? "Registration submitted. Please wait for Admin approval."
+            : "User registered successfully!";
+
+            res.status(201).json({
+                success: true,
+                message: successMessage,
+                user: {
+                    id: newUser.id,
+                    role: newUser.role,
+                    status: newUser.status 
+                }
+            });
     } catch (error) {
+        console.error("Error in addUser:", error);
         res.status(500).json({ 
-            message: "Error adding user",
-            error: error.message
+            message: "Error adding user"
          });
     }
 };
@@ -55,35 +84,41 @@ const getUsersById = async (req, res) => {
     try {
         const id = req.params.uid;
         const user = await User.findByPk(id);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ 
+            message: "User not found" 
+        });
 
         return res.json({
-            user: { id: user.id, name: user.username, email: user.email },
+             id: user.id, 
+             fullName: user.username, 
+             email: user.email,
             message: "User fetched successfully",
+            profileImage: user.profileImage 
         });
     } catch (error) {
         return res.status(500).json({ 
             message: "Error retrieving user", 
-            error: error.message });
+            error: error.message 
+        });
     }
 };
 
-
-const getActiveUsers = async (req, res) =>{
-    res.json({message:"this is the getUser request"});
-};
 const deleteUser  = async (req, res) =>{
     try {
-        const id = req.params.uid
-        const users = await User.findByPk(id)
-        return res.json({
-            user: {id:users.id, name:users.username},
-            message: "Users deleted successfully",
-            
-        })
+        const {id} = req.params;
+        const deletedCount = await User.destroy({
+            where: { id: id }
+        });
+
+        if (deletedCount === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({
+            message: "Users deleted successfully"   
+        });
     } catch (error) {
-        return res.status(500).json({ 
-            message: "Error retrieving users", 
+         res.status(500).json({ 
+            message: "Error deleting users",
             error: error.message 
         });
    }
@@ -92,43 +127,26 @@ const deleteUser  = async (req, res) =>{
 const updateUser  = async (req, res) =>{
     try {
         const {id} = req.params;
-        const {username, email, password}= req.body;
-        const users = await User.findByPk(id);
-        if (!users){
+        const {fullName, email, password}= req.body;
+        const user = await User.findByPk(id);
+        if (!user){
             return res.status(404).json({
                 message:"User not found",
             });
         }
-        if (username){
-            const isexistinguser=await User.findOne({where:{username}})
-            if (isexistinguser && isexistinguser.id !==users.id){
-                return res.status(400).json({
-                    message: "user with that username exist!",
-                })
-
-            }
-        
-        let hashedPassword= users.password;
-        if(password){
-            hashedPassword= await bcrypt.hash(password,10);
+        let hashedPassword = user.password;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
         }
-        await users.update({
-            username: username || users.username,
-            email: email || users.email,
+        await user.update({
+            fullName: fullName || user.fullName,
+            email: email || user.email,
             password: hashedPassword,
-                });
-        return res.status(200).json({
-            message: "Users update successfully",
-            users,
         });
-    }
+        return res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
-        return res.status(500).json({ 
-       
-            message: "Error updating users", 
-            error: error.message 
-        });
-   }
+        return res.status(500).json({ message: "Error updating user", error: error.message });
+    }
 }; 
 
 const loginUser=async(req,res)=>{
@@ -183,8 +201,7 @@ const loginUser=async(req,res)=>{
 };
 
 module.exports={
-    getAllUsers,
-    getActiveUsers, 
+    getAllUsers, 
     addUser, 
     getUsersById, 
     updateUser, 

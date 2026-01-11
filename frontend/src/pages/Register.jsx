@@ -82,11 +82,11 @@ export default function RegistrationForm() {
       } else {
       toast.error(response.data.message || "User creation failed!");
      } 
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Internal Server Error';
-    toast.error(errorMessage);
-    console.error("Full Backend Error:", error.response?.data);
-}
+    } catch (error) {
+      console.error("Error Object:", error);
+      const errorMessage = error.response?.data?.message || error.message || 'Server is unreachable';
+      toast.error(errorMessage);
+  }
   };
 
   return (
