@@ -1,7 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { createUserApi } from "../services/api";
+
+const navLinkStyle = { 
+  margin: '0 15px', 
+  color: '#2c2b2b', 
+  textDecoration: 'none',
+  fontSize: '16px'
+};
 
 export default function RegistrationForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -11,12 +22,71 @@ export default function RegistrationForm() {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+       ...formData,
+        [e.target.name]: e.target.value 
+      });
   };
 
-  const handleSubmit = (e) => {
+  const validate = () => {
+    if (!formData.fullName.trim()) {
+      toast.error("Name is required");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Email is invalid");
+      return false;
+    }
+    if (!formData.password.trim()) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
+    if (!formData.role.trim()) {
+      toast.error("Select your role");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    if (!validate()) return;
+    try {
+      const dataToSubmit ={
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        role: formData.role,
+      };
+      const response = await createUserApi(dataToSubmit);
+        if (response.status === 200 || response.status === 201) {
+          const userId = response.data.id; 
+         localStorage.setItem('tempUserId', userId);
+         toast.success("User created successfully!");
+         setTimeout(() => {
+          navigate("/uploadimage");
+        }, 2000);
+      } else {
+      toast.error(response.data.message || "User creation failed!");
+     } 
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Internal Server Error';
+    toast.error(errorMessage);
+    console.error("Full Backend Error:", error.response?.data);
+}
   };
 
   return (
@@ -24,19 +94,16 @@ export default function RegistrationForm() {
 
       <nav className="w-full flex justify-between items-center py-4 px-6 bg-white shadow-sm">
         <div className="flex items-center gap-2 text-[26px] font-bold">
-          <img src="/logo.png" alt="Logo" className="h-[75px] w-auto" />
+          <img 
+          src="/logo.png" 
+          alt="Logo"
+           className="h-[75px] w-auto" 
+           />
           <span>Nepal TrekMate</span>
         </div>
-
         <div className="flex items-center space-x-6">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
-          <Link to="/contact" className="hover:text-blue-600">About</Link>
-          <Link
-            to="/search"
-            className="border px-4 py-1 rounded hover:bg-gray-100"
-          >
-            Back
-          </Link>
+          <Link to="/" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>Home</Link>
+          <Link to="/about" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>About</Link>
         </div>
       </nav>
 
@@ -108,7 +175,7 @@ export default function RegistrationForm() {
 
           {/* Role */}
           <div>
-            <label className="block mb-2 font-medium">Login As</label>
+            <label className="block mb-2 font-medium">Sign Up As</label>
             <select
               name="role"
               value={formData.role}
