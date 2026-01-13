@@ -1,8 +1,13 @@
 import React from 'react';
 import { 
-  LayoutDashboard, Users, UserCheck, Package, 
-  BookOpen, LogOut 
+  LayoutDashboard, 
+  Users, 
+  UserCheck, 
+  Package, 
+  BookOpen, 
+  LogOut 
 } from 'lucide-react';
+
 
 const AdminSidebar = () => {
 
