@@ -20,9 +20,9 @@ function App(){
         <Route path="/" element={<HomePage/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/about" element={<About/>}/>
-        <Route path = "register" element = {<Register/>}/>
-        <Route path = "uploadimage" element = {<ProfileUpload/>}/>
-        <Route path = "approveagent" element = {<ApproveAgents/>}/>
+        <Route path="/register" element = {<Register/>}/>
+        <Route path= "/uploadimage" element = {<ProfileUpload/>}/>
+        <Route path="/approveagents" element={<ApproveAgents />} />
         <Route path="/admindashboard" element={
           <ProtectedRoute allowedRoles={['admin']} element={<AdminDashboard/>}/>}/>
       </Routes>
