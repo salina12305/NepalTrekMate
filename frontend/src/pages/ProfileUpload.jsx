@@ -117,6 +117,7 @@ export default function FileUpload() {
               onClick={handleDelete}
               className="text-gray-600 hover:text-red-600 transition-colors"
               aria-label="Delete file" >
+
               <Trash2 size={20} />
             </button>
           )}
@@ -126,6 +127,7 @@ export default function FileUpload() {
           <button
             onClick={handleCancel}
             className="px-6 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors" >
+
             Cancel
           </button>
           <button

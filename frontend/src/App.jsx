@@ -16,6 +16,7 @@ function App(){
     <Router>
       <Toaster/>
       <Routes>
+
         <Route path="/home" element={<Home/>}/>
         <Route path="/" element={<HomePage/>}/>
         <Route path="/login" element={<Login/>}/>
