@@ -10,7 +10,7 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-const AdminSidebar = () => {
+const AdminSidebar = ({userData}) => {
   const location = useLocation(); 
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_API_BASE_URL;

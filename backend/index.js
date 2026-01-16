@@ -8,6 +8,8 @@ const { sequelize, connectDB }= require("./database/database");
 const User = require("./models/usermodel");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cors({
     origin: 'http://localhost:5173', 
     credentials: true,               

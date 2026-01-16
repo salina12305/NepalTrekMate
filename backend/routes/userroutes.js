@@ -17,7 +17,11 @@ const {
     getPendingRequests, 
     approveUser, 
     rejectUser 
-  } = require('../controllers/approveController');
+} = require('../controllers/approveController');
+
+const { adminUpdateUser, 
+  adminDeleteUser 
+} = require('../controllers/adminController');
 
 router.post("/register", addUser);
 router.post ("/login",loginUser);
@@ -26,9 +30,13 @@ router.get("/get_all_users", getAllUsers);
 router.get("/getUserByid/:uid", getUsersById);
 router.delete("/delete_users/:id", deleteUser);
 
+router.put("/admin/update-user/:id",authGuard,isAdmin,adminUpdateUser);
+router.delete("/admin/delete-user/:id", adminDeleteUser);
 router.put('/approve-user/:id',authGuard, approveUser);
 router.get('/pending-requests',authGuard, getPendingRequests);
 router.delete('/reject-user/:id',authGuard,rejectUser);
+
+
 
 router.post('/upload-profile', upload.single('profileImage'), uploadProfileImage);
 
