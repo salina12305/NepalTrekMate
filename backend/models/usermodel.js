@@ -34,6 +34,11 @@ const User = sequelize.define(
         status: {
             type: DataTypes.STRING,
             defaultValue: 'pending' 
+        },
+        profileImage: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'default-avatar.png' 
         }
     },
     {

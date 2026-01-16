@@ -5,6 +5,8 @@ const cors = require("cors");
 const app = express();
 const { sequelize, connectDB }= require("./database/database");
 
+const User = require("./models/usermodel");
+
 app.use(express.json());
 app.use(cors({
     origin: 'http://localhost:5173', 
@@ -12,6 +14,10 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+// app.use('/public/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static('public/uploads'));
+
 app.use("/api/user/",require('./routes/userroutes'))
 
 app.get("/",(req,res)=>{

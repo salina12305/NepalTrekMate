@@ -88,11 +88,10 @@ const getUsersById = async (req, res) => {
             message: "User not found" 
         });
 
-        return res.json({
-             id: user.id, 
-             fullName: user.username, 
-             email: user.email,
-            message: "User fetched successfully",
+         return res.json({
+            id: user.id, 
+            fullName: user.fullName, 
+            email: user.email,
             profileImage: user.profileImage 
         });
     } catch (error) {
@@ -106,18 +105,20 @@ const getUsersById = async (req, res) => {
 const deleteUser  = async (req, res) =>{
     try {
         const {id} = req.params;
-        const deletedCount = await User.destroy({
-            where: { id: id }
-        });
-
-        if (deletedCount === 0) {
-            return res.status(404).json({ message: "User not found" });
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({
+              success:false,
+              message: "User not found",
+            });
         }
-        res.status(200).json({
+        await user.destroy();
+        return res.status(200).json({
+            success:true,
             message: "Users deleted successfully"   
         });
     } catch (error) {
-         res.status(500).json({ 
+         return res.status(500).json({ 
             message: "Error deleting users",
             error: error.message 
         });
@@ -134,6 +135,14 @@ const updateUser  = async (req, res) =>{
                 message:"User not found",
             });
         }
+        if (fullName) {
+            const isexistinguser = await User.findOne({ where: { username } })
+            if (isexistinguser && isexistinguser.id !== user.id) {
+              return res.status(400).json({
+                success:false,
+                message: "user with that username exist!",
+              })
+            }
         let hashedPassword = user.password;
         if (password) {
             hashedPassword = await bcrypt.hash(password, 10);
@@ -143,9 +152,18 @@ const updateUser  = async (req, res) =>{
             email: email || user.email,
             password: hashedPassword,
         });
-        return res.status(200).json({ message: "User updated successfully" });
+        return res.status(200).json({ 
+            message: "User updated successfully" ,
+            user: {
+                id:user.id
+            },
+        });
+    }
     } catch (error) {
-        return res.status(500).json({ message: "Error updating user", error: error.message });
+        return res.status(500).json({ 
+            message: "Error updating user", 
+            error: error.message
+        });
     }
 }; 
 
@@ -200,13 +218,55 @@ const loginUser=async(req,res)=>{
     }
 };
 
+const uploadProfileImage = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+        const { userId } = req.body; 
+
+        const imagePath = `/uploads/${req.file.filename}`; 
+
+        await User.update(
+            { profileImage: imagePath }, 
+            { where: { id: userId } }
+        );
+
+        res.status(200).json({ success: true, profileImage: imagePath });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+const registerUser = async (req, res) => {
+    try {
+        const newUser = await User.create(req.body);
+        const io = req.app.get('socketio');
+
+        if (newUser.role === 'travelagent') {
+            io.emit('new_notification', {
+                message: `Alert: Travel Agent ${newUser.fullName} is waiting for approval!`,
+                type: 'approval_needed',
+                user: newUser
+            });
+        } else {
+            io.emit('new_notification', {
+                message: `New user registration: ${newUser.fullName}`,
+                type: 'standard_reg'
+            });
+        }
+        res.status(201).json({ success: true, user: newUser });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports={
     getAllUsers, 
     addUser, 
     getUsersById, 
     updateUser, 
     deleteUser, 
-    loginUser
-
+    loginUser,
+    uploadProfileImage,
+    registerUser
 }
 

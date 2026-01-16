@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -86,7 +87,7 @@ export default function RegistrationForm() {
       console.error("Error Object:", error);
       const errorMessage = error.response?.data?.message || error.message || 'Server is unreachable';
       toast.error(errorMessage);
-  }
+    }
   };
 
   return (
@@ -101,6 +102,7 @@ export default function RegistrationForm() {
            />
           <span>Nepal TrekMate</span>
         </div>
+
         <div className="flex items-center space-x-6">
           <Link to="/" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>Home</Link>
           <Link to="/about" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>About</Link>
@@ -181,8 +183,7 @@ export default function RegistrationForm() {
               value={formData.role}
               onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-              required
-            >
+              required>
               <option value="">Select Role</option>
               <option value="admin">Admin</option>
               <option value="user">User</option>
@@ -195,17 +196,13 @@ export default function RegistrationForm() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold mt-6 hover:bg-blue-700 transition-all shadow-md active:scale-[0.98]"
-        >
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold mt-6 hover:bg-blue-700 transition-all shadow-md active:scale-[0.98]" >
           Sign Up
         </button>
 
         <p className="text-center mt-6 text-gray-600 text-sm">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-600 font-semibold hover:underline"
-          >
+          <Link to="/login" className="text-blue-600 font-semibold hover:underline">
             Login
           </Link>
         </p>
