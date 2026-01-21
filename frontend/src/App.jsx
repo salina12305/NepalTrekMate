@@ -9,8 +9,9 @@ import About from './pages/About';
 import ProfileUpload from './pages/ProfileUpload';
 import { Toaster } from 'react-hot-toast';
 import ApproveAgents from './pages/ApproveAgents';
+import AdminUsers from './pages/AdminUsers';
 import AdminDashboard from './pages/AdminDashboard';
-
+// import AdminPackages from './pages/AdminPackages';
 function App(){
   return (
     <Router>
@@ -24,9 +25,12 @@ function App(){
         <Route path="/register" element = {<Register/>}/>
         <Route path= "/uploadimage" element = {<ProfileUpload/>}/>
         <Route path="/approveagents" element={<ApproveAgents />} />
+        <Route path="/adminusers" element={<AdminUsers/>}/>
         <Route path="/admindashboard" element={
           <ProtectedRoute allowedRoles={['admin']} element={<AdminDashboard/>}/>}/>
       </Routes>
+      {/* <Route path="/adminpackages" element={<AdminPackages/>}/> */}
+
     </Router>
   )
 }
