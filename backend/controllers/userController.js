@@ -63,7 +63,7 @@ const addUser = async (req, res) => {
         console.error("Error in addUser:", error);
         res.status(500).json({ 
             message: "Error adding user"
-         });
+        });
     }
 };
 

@@ -3,7 +3,7 @@ import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
 import { useNavigate } from 'react-router-dom';
 import { getUserById, getAgentPackagesApi, deletePackageApi } from '../services/api';
-import { MapPin } from 'lucide-react'; // Added missing import for MapPin
+import { MapPin } from 'lucide-react'; 
 import toast from "react-hot-toast";
 
 const TravelAgentPackages = () => {

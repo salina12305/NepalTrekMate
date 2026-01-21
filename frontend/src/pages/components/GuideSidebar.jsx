@@ -4,6 +4,23 @@ import {
 } from 'lucide-react';
 
 const GuideSidebar = () => {
+  const backendUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const getProfileImageUrl = () => {
+    if (!userData?.profileImage) return "/ne.png";
+    
+    if (userData.profileImage.startsWith('http')) return userData.profileImage;
+
+    const cleanPath = userData.profileImage.startsWith('/') 
+      ? userData.profileImage.substring(1) 
+      : userData.profileImage;
+      
+    return `${backendUrl}/${cleanPath}`; 
+  };
+  console.log("--- Sidebar Debug ---");
+  console.log("Full userData object:", userData);
+  console.log("Final Image URL:", getProfileImageUrl());
+
   const menuItems = [
     { icon: <Backpack size={18}/>, label: "My Tours"},
     { icon: <Calendar size={18}/>, label: "Upcoming" },
@@ -52,10 +69,9 @@ const GuideSidebar = () => {
       </nav>
 
       <div className="pt-4 border-t border-cyan-200/60">
-        <div className="flex items-center gap-3 px-4 py-3 text-slate-600 cursor-pointer hover:text-red-500 transition-colors group">
-          <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-          <span className="text-sm font-bold">Logout</span>
-        </div>
+        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-red-500 transition-colors group font-bold text-sm">
+          <LogOut size={18} /> Logout
+        </button>
       </div>
     </aside>
   );

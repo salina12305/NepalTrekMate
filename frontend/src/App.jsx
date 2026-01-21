@@ -13,7 +13,7 @@ import { Toaster } from 'react-hot-toast';
 import ApproveAgents from './pages/ApproveAgents';
 import AdminUsers from './pages/AdminUsers';
 import AdminDashboard from './pages/AdminDashboard';
-// import AdminPackages from './pages/AdminPackages';
+import TravelAgentPackages from './pages/TravelAgentPackages';
 function App(){
   return (
     <Router>
@@ -30,10 +30,9 @@ function App(){
         <Route path="/admindashboard" element={
           <ProtectedRoute allowedRoles={['admin']} element={<AdminDashboard/>}/>}/>
       <Route path="/forgotpassword" element={<ForgotPassword/>}/>
-        <Route path="/resetpassword" element={<ResetPassword/>}/>
+      <Route path="/resetpassword" element={<ResetPassword/>}/>
+      <Route path="/agentpackages" element={<TravelAgentPackages/>}/>
       </Routes>
-      {/* <Route path="/adminpackages" element={<AdminPackages/>}/> */}
-
     </Router>
   )
 }
