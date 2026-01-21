@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './protected/ProtectedRoute';
 
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import HomePage from './pages/HomePage';
 import Register from './pages/Register'
@@ -17,7 +19,6 @@ function App(){
     <Router>
       <Toaster/>
       <Routes>
-
         <Route path="/home" element={<Home/>}/>
         <Route path="/" element={<HomePage/>}/>
         <Route path="/login" element={<Login/>}/>
@@ -28,6 +29,8 @@ function App(){
         <Route path="/adminusers" element={<AdminUsers/>}/>
         <Route path="/admindashboard" element={
           <ProtectedRoute allowedRoles={['admin']} element={<AdminDashboard/>}/>}/>
+      <Route path="/forgotpassword" element={<ForgotPassword/>}/>
+        <Route path="/resetpassword" element={<ResetPassword/>}/>
       </Routes>
       {/* <Route path="/adminpackages" element={<AdminPackages/>}/> */}
 
