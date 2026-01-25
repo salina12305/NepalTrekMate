@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './protected/ProtectedRoute';
-
+import { Toaster } from 'react-hot-toast';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
@@ -9,13 +9,13 @@ import Register from './pages/Register'
 import Login from './pages/Login';
 import About from './pages/About';
 import ProfileUpload from './pages/ProfileUpload';
-import { Toaster } from 'react-hot-toast';
 import ApproveAgents from './pages/ApproveAgents';
 import AdminUsers from './pages/AdminUsers';
 import AdminDashboard from './pages/AdminDashboard';
 import TravelAgentDashboard from './pages/TravelAgentDashboard';
 import TravelAgentPackages from './pages/TravelAgentPackages';
 import AdminBooking from './pages/AdminBooking';
+import AddPackageForm from './pages/AddPackageForm';
 function App(){
   return (
     <Router>
@@ -35,6 +35,7 @@ function App(){
       <Route path="/forgotpassword" element={<ForgotPassword/>}/>
       <Route path="/resetpassword" element={<ResetPassword/>}/>
       <Route path="/travelagentdashboard" element={<TravelAgentDashboard/>}/> 
+      <Route path="/agentapackage" element={<AddPackageForm />} />
       <Route path="/agentpackages" element={<TravelAgentPackages/>}/>
       </Routes>
     </Router>
