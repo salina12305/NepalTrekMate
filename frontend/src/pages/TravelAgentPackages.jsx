@@ -108,8 +108,15 @@ const TravelAgentPackages = () => {
                   <div className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">⏱️ {pkg.durationDays} Days</div>
                   <div className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">💰 Rs. {pkg.price}</div>
                 </div>
-                
-                {/* View, Edit, and Delete button rows have been removed */}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/editpackages/${pkg.id || pkg._id}`)}
+                    className="w-full py-2 bg-slate-100 hover:bg-slate-800 hover:text-white text-slate-700 text-[10px] font-black uppercase rounded-xl transition-all"
+                  >
+                    Edit Package
+                  </button>
+                </div>
               </div>
             ))
           ) : (
