@@ -12,7 +12,6 @@ import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [userData, setUserData] = useState(null);

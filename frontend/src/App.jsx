@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './protected/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -18,7 +19,9 @@ import AdminBooking from './pages/AdminBooking';
 import AddPackageForm from './pages/AddPackageForm';
 
 
-function App(){
+import FeedbackPage from './pages/Feedback'; 
+
+export default function App() {
   return (
     <Router>
       <Toaster/>
@@ -43,6 +46,5 @@ function App(){
     </Router>
   )
 }
-export default App;
 
 
