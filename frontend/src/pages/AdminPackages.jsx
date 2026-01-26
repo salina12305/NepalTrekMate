@@ -22,6 +22,9 @@ const AdminPackages = () => {
   const [userData, setUserData] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
+  const[searchTerm, setSearchTerm] = useState("");
+
+
   // --- NOTIFICATION STATES ---
   const [showNoti, setShowNoti] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -114,6 +117,11 @@ const AdminPackages = () => {
     }
   };
 
+  const filteredPackages = packages.filter(pkg => 
+    pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pkg.destination?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex bg-slate-50 min-h-screen">
       <AdminSidebar userData={userData} />
@@ -185,7 +193,17 @@ const AdminPackages = () => {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
           <div className="p-4 bg-[#E6F4F9]/30 flex justify-between items-center border-b">
             <h3 className="font-bold text-slate-800">Package Directory</h3>
-            {/* Search Part Removed */}
+
+          <div className="relative">
+              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search package or destination..." 
+                className="pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 outline-none w-64 focus:ring-2 focus:ring-blue-400"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="overflow-x-auto">
