@@ -6,14 +6,17 @@ import { getUserById, getAgentPackagesApi, deletePackageApi } from '../services/
 import { MapPin } from 'lucide-react'; 
 import toast from "react-hot-toast";
 
+
 const TravelAgentPackages = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadPageData = async () => {
+
       const userId = localStorage.getItem('userId');
       if (!userId) return navigate('/login');
 
@@ -36,8 +39,6 @@ const TravelAgentPackages = () => {
     loadPageData();
   }, [navigate]);
 
-  
-
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -49,6 +50,7 @@ const TravelAgentPackages = () => {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <TravelAgentSidebar type="agent" userData={userData} />
+
 
       <main className="flex-1 p-8">
         <TravelAgentHeaderStatCard
@@ -75,8 +77,8 @@ const TravelAgentPackages = () => {
             </div>
             <p className="text-slate-500 font-bold text-sm">Add New Package</p>
           </div>
-
           {/* Conditional Rendering for Package List */}
+
           {packages.length > 0 ? (
             packages.map((pkg) => (
               <div key={pkg.id || pkg._id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all flex flex-col">
@@ -93,6 +95,7 @@ const TravelAgentPackages = () => {
                           src={`${import.meta.env.VITE_API_BASE_URL}/public/uploads/${pkg.packageImage}`}
                           alt="pkg"
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+
                           onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=No+Image"; }}
                         />
                       ) : (
@@ -103,6 +106,7 @@ const TravelAgentPackages = () => {
                   </div>
 
                   <h3 className="text-lg font-black text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+
                     {pkg.packageName}
                   </h3>
                   <p className="text-slate-500 text-xs mb-4 font-bold flex items-center gap-1">
@@ -111,6 +115,7 @@ const TravelAgentPackages = () => {
                 </div>
 
                 <div className="flex gap-4 mb-6">
+
                   <div className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">⏱️ {pkg.durationDays} Days</div>
                   <div className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">💰 Rs. {pkg.price}</div>
                 </div>

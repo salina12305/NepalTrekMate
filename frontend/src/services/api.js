@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const Api = axios.create({
@@ -61,3 +62,4 @@ export const updatePackageById = (id, formData) =>
 
 export const getAllPackagesApi = () => Api.get("/api/packages/get_all", getAuthHeader());
 export const getAllBookingsApi = () => Api.get("/api/bookings/get_all", getAuthHeader());
+

@@ -5,7 +5,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import HomePage from './pages/HomePage';
-import Register from './pages/Register'
+import Register from './pages/Register';
 import Login from './pages/Login';
 import About from './pages/About';
 import ProfileUpload from './pages/ProfileUpload';
@@ -16,6 +16,7 @@ import TravelAgentDashboard from './pages/TravelAgentDashboard';
 import TravelAgentPackages from './pages/TravelAgentPackages';
 import AdminBooking from './pages/AdminBooking';
 import AddPackageForm from './pages/AddPackageForm';
+
 function App(){
   return (
     <Router>

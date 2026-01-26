@@ -40,7 +40,6 @@ const addUser = async (req, res) => {
             role,
             status: initialStatus
         });
-
         res.status(201).json({ 
             success: true,
             id: newUser.id,
@@ -175,20 +174,17 @@ const loginUser=async(req,res)=>{
             return res.status(400).json({
             message: "Users not found!!"}) 
         }
-
         if (user.role !== role) {
             return res.status(403).json({ 
                 message: `Unauthorized. You are registered as a ${user.role}, not an ${role}.` 
             });
         }
-
         if ((user.role === 'travelagent') && user.status === 'pending') {
             return res.status(403).json({ 
                 success: false,
                 message: "Your account is pending admin approval. Please wait for verification." 
             });
         }
-
         const isvalidUser = await bcrypt.compare(password,user.password)
         if (!isvalidUser){
             return res.status(400).json({
