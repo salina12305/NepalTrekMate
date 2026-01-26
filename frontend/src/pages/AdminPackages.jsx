@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
+import { Search, Eye } from 'lucide-react'; // Removed Trash2
 import { useNavigate } from 'react-router-dom';
 import { 
   getUserById, 
@@ -8,17 +9,18 @@ import {
   getAllUsersApi, 
   getAllBookingsApi,
   getPendingRequestsApi 
-} from '../services/api'; 
+} from '../services/api'; // Removed deletePackageApi
 import toast from 'react-hot-toast';
 
 const AdminPackages = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // --- EXISTING STATES ---
+  // --- STATES ---
   const [packages, setPackages] = useState([]);
   const [users, setUsers] = useState([]); 
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [userData, setUserData] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
@@ -29,7 +31,7 @@ const AdminPackages = () => {
     localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
   );
 
-  // --- REUSABLE FETCH DATA ---
+  // --- DATA FETCHING ---
   const fetchData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
     const storedUserId = localStorage.getItem('userId'); 
@@ -114,6 +116,11 @@ const AdminPackages = () => {
     }
   };
 
+  const filteredPackages = packages.filter(pkg => 
+    pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pkg.destination?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex bg-slate-50 min-h-screen">
       <AdminSidebar userData={userData} />
@@ -185,7 +192,16 @@ const AdminPackages = () => {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
           <div className="p-4 bg-[#E6F4F9]/30 flex justify-between items-center border-b">
             <h3 className="font-bold text-slate-800">Package Directory</h3>
-            {/* Search Part Removed */}
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search package or destination..." 
+                className="pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 outline-none w-64 focus:ring-2 focus:ring-blue-400"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -196,15 +212,15 @@ const AdminPackages = () => {
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Duration</th>
                   <th className="px-6 py-4">Status</th>
-                  {/* Action Column Removed */}
+                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {loading ? (
-                  <tr><td colSpan="4" className="p-10 text-center text-slate-400">Loading...</td></tr>
-                ) : packages.length === 0 ? (
-                    <tr><td colSpan="4" className="p-10 text-center text-slate-400">No packages found.</td></tr>
-                ) : packages.map((pkg) => (
+                  <tr><td colSpan="5" className="p-10 text-center text-slate-400">Loading...</td></tr>
+                ) : filteredPackages.length === 0 ? (
+                    <tr><td colSpan="5" className="p-10 text-center text-slate-400">No packages found.</td></tr>
+                ) : filteredPackages.map((pkg) => (
                   <tr key={pkg._id || pkg.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="w-12 h-10 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
@@ -227,7 +243,15 @@ const AdminPackages = () => {
                         {pkg.availability ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    {/* Action Buttons (View/Delete) Removed */}
+                    <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => navigate(`/admin/view-package/${pkg._id || pkg.id}`)} 
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
