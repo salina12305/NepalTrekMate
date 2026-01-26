@@ -11,11 +11,17 @@ app.get("/",(req,res)=>{
     res.json({message:"Welcome to the Home Page"});
 });
 
+const PORT = 3000;
 const startServer = async () => {
+    try{
     await connectDB();
-    await sequelize.sync();
-    app.listen(3000, ()=>{
-        console.log('Server is running on port ${3000}');
+    await sequelize.sync({alter: true});
+    console.log("Database synced successfully");
+    app.listen(PORT, ()=>{
+        console.log(`Server is running on port ${PORT}`);
     });
+}catch(error){
+    console.error("Error starting server:", error);
+}
 };
 startServer();
