@@ -1,21 +1,23 @@
-
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import AdminBooking from "./pages/AdminBooking";
 
+import FeedbackPage from './pages/Feedback'; 
 
-function App(){
+export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home/>}/>
-      <Route path="/forgotpassword" element={<ForgotPassword/>}/>
-        <Route path="/resetpassword" element={<ResetPassword/>}/>
+      
+        <Route path="/feedback" element={<FeedbackPage />} />
+        
+        {/* Existing Routes */}
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
+        <Route path="/resetpassword" element={<ResetPassword />} />
+        <Route path="/adminbooking" element={<AdminBooking />} />
+       
       </Routes>
-    </Router>
-  )
+    </BrowserRouter>
+  );
 }
-export default App
-
-
