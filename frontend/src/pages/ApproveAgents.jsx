@@ -49,8 +49,6 @@ const ApproveAgents = () => {
     }
   };
 
-  
-
   const activeAgentsCount = users.filter(u => u.role === 'travelagent' && u.status === 'approved').length;
 
   const approvalCardStyle = {
