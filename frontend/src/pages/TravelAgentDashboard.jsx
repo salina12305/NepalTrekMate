@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
 import { 
@@ -7,35 +8,64 @@ import {
 } from 'recharts';
 import { getUserById, getAgentPackagesApi, getAllBookingsApi } from '../services/api';
 
-const chartData = [
-  { name: 'Sun', rev: 400 }, { name: 'Mon', rev: 320 }, 
-  { name: 'Tue', rev: 480 }, { name: 'Wed', rev: 635 }, 
-  { name: 'Thu', rev: 420 }, { name: 'Fri', rev: 550 }, 
-  { name: 'Sat', rev: 520 },
-];
 
 const TravelAgentDashboard = () => {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState([]);
   const [bookings, setBookings] = useState([]); 
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        const userRes = await getUserById(userId);
-        setUserData(userRes.data);
+  const [dynamicChartData, setDynamicChartData] = useState([
+    { name: 'Sun', rev: 0 }, { name: 'Mon', rev: 0 }, { name: 'Tue', rev: 0 },
+    { name: 'Wed', rev: 0 }, { name: 'Thu', rev: 0 }, { name: 'Fri', rev: 0 }, { name: 'Sat', rev: 0 }
+  ]);
 
-        const pkgRes = await getAgentPackagesApi(userId);
-        setPackages(pkgRes.data.packages || []);
+ const fetchDashboardData = useCallback(async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const [userRes, pkgRes, bookingRes] = await Promise.all([
+        userId ? getUserById(userId) : Promise.resolve({ data: null }),
+        getAllPackagesApi(), 
+        getAllBookingsApi()  
+      ]);
 
-        const bookingRes = await getAllBookingsApi();
-        setBookings(bookingRes.data.data || []);
-      } catch (err) { console.error(err); } 
-      finally { setLoading(false); }
-    };
-    fetchDashboardData();
+      if (userRes?.data) setUserData(userRes.data);
+      
+      const allPackages = pkgRes.data?.packages || pkgRes.data || [];
+      setPackages(allPackages);
+      
+      const allBookings = bookingRes.data?.data || bookingRes.data || [];
+      const confirmedList = allBookings.filter(b => 
+        String(b.status || "").toLowerCase().includes('confirm')
+      );
+
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const revenueMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
+      
+      confirmedList.forEach(booking => {
+        const rawDate = booking.createdAt || booking.bookingDate;
+        if (rawDate) {
+          const dayName = days[new Date(rawDate).getDay()];
+          revenueMap[dayName] += (Number(booking.totalPrice) || 0);
+        }
+      });
+
+      setDynamicChartData(days.map(day => ({ name: day, rev: revenueMap[day] })));
+      setTotalRevenue(confirmedList.reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0));
+      
+      setTripStats({
+        total: allBookings.length,
+        confirmed: confirmedList.length,
+        processing: allBookings.filter(b => String(b.status || "").toLowerCase().includes('pend')).length,
+        canceled: allBookings.filter(b => String(b.status || "").toLowerCase().includes('cancel')).length
+      });
+
+    } catch (err) { 
+      console.error("Dashboard Sync Error:", err); 
+    } finally { 
+      setLoading(false); 
+    }
   }, []);
 
   if (loading) {
@@ -51,59 +81,87 @@ const TravelAgentDashboard = () => {
       <TravelAgentSidebar type="agent" userData={userData} />
       <main className="flex-1 p-8">
         <TravelAgentHeaderStatCard 
-            title="Agent Overview"
-            subtitle="Real-time performance metrics"
+            title="Agent Intelligence"
+            subtitle="Real-time system-wide performance"
             stats={{
                 totalPackages: packages.length,
-                totalBookings: bookings.filter(b => b.status === 'confirmed').length,
-                revenue: bookings.filter(b => b.status === 'confirmed')
-                                 .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0),
+                totalBookings: tripStats.total,
+                revenue: `Rs. ${totalRevenue.toLocaleString()}`,
                 rating: "4.8",
-                notifications: bookings.filter(b => b.status === 'pending').length
+                notifications: tripStats.processing
             }}
             loading={loading}
         />
 
-        {/* --- REVENUE CHART --- */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
-          <h3 className="font-bold text-slate-800 mb-8">Revenue Overview</h3>
-          <div style={{ width: '100%', height: 300 }}>
+        {/* --- REVENUE TRENDS --- */}
+        <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm mb-8 mt-6">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
+              Revenue Trends
+            </h3>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Last 7 Days</span>
+          </div>
+          
+          <div style={{ width: '100%', height: 320 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={dynamicChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} tickFormatter={(v) => `Rs.${v}`} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                <Line type="monotone" dataKey="rev" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} 
+                    dy={10} 
+                />
+                <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} 
+                    tickFormatter={(v) => `Rs.${v}`} 
+                />
+                <Tooltip 
+                    formatter={(value) => [`Rs. ${value}`, "Revenue"]}
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
+                />
+                <Line 
+                    type="monotone" 
+                    dataKey="rev" 
+                    stroke="#3b82f6" 
+                    strokeWidth={4} 
+                    dot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }} 
+                    activeDot={{ r: 8, strokeWidth: 0 }} 
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* --- TRIP STATUS BAR --- */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-8">
-            <div className="flex items-center gap-4 border-r border-slate-100 pr-8">
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl">🏔️</div>
-                <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Trips</p>
-                    <p className="text-xl font-bold text-slate-800">{bookings.length}</p> 
-                </div>
+        <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm flex items-center gap-10">
+          <div className="flex items-center gap-5 border-r border-slate-100 pr-10">
+            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl">🏔️</div>
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Trips</p>
+              <h3 className="text-3xl font-black text-slate-800 m-0">{tripStats.total}</h3>
             </div>
-            <div className="flex-1">
-                {/* Visual indicator of booking stats */}
-                <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100 mb-3">
-                    <div className="bg-cyan-300" style={{ width: '60%' }}></div>
-                    <div className="bg-blue-400" style={{ width: '25%' }}></div>
-                    <div className="bg-blue-600" style={{ width: '15%' }}></div>
-                </div>
-                <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
-                    <span>System Bookings: {bookings.length}</span>
-                </div>
+          </div>
+          <div className="flex-1">
+            <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden mb-5">
+              <div style={{ width: getWidth(tripStats.confirmed) }} className="bg-emerald-400 transition-all duration-700"></div>
+              <div style={{ width: getWidth(tripStats.processing) }} className="bg-blue-400 transition-all duration-700"></div>
+              <div style={{ width: getWidth(tripStats.canceled) }} className="bg-rose-400 transition-all duration-700"></div>
             </div>
+            <div className="flex gap-8 text-[11px] font-bold text-slate-500 uppercase">
+               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400"></div> Confirmed {tripStats.confirmed}</span>
+               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-400"></div> Processing {tripStats.processing}</span>
+               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-400"></div> Canceled {tripStats.canceled}</span>
+            </div>
+          </div>
         </div>
       </main>
     </div>
   );
 };
 
-export default TravelAgentDashboard;``
+export default TravelAgentDashboard;
