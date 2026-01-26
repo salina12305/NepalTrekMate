@@ -9,7 +9,7 @@ const User = sequelize.define(
             autoIncrement: true,
             primaryKey: true,
         },
-        username: {
+        fullName: {
             type: DataTypes.STRING,
             allowNull: false,
             unique: true,
@@ -26,10 +26,15 @@ const User = sequelize.define(
             type: DataTypes.STRING,
             allowNull: false,
         },
+
         role:{
             type: DataTypes.ENUM('user', 'admin', 'travelagent', 'guide'),
             defaultValue:'user',
         },
+        status:{
+            type: DataTypes.STRING,
+            defaultValue:'pending'
+        }
     },
     {
         tableName: "users",
