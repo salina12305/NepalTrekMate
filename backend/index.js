@@ -11,7 +11,6 @@ const Package = require("./models/packagemodel");
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
     origin: 'http://localhost:5173', 
@@ -26,6 +25,7 @@ app.use('/uploads', express.static('public/uploads'));
 // 2. DEFINE ROUTES
 app.use("/api/user/",require('./routes/userroutes'))
 app.use("/api/packages", require('./routes/packageroutes')); 
+
 
 app.get("/",(req,res)=>{
     res.json({message:"Welcome to the Home Page"});

@@ -3,13 +3,16 @@ import TripCard from './TripCard';
 import UserStatCard from './components/UserStatCard';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { getUserById, getAllPackagesApi } from '../services/api';
+import { getUserById, getAllPackagesApi, getMyWishlistApi } from '../services/api';
+
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [wishlistItems, setWishlistItems] =useState([]);
 
   const backendUrl = "http://localhost:3000";
 
@@ -37,6 +40,36 @@ const UserDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    if (activeTab === 'wishlist') {
+      const fetchWishlist = async () => {
+        try {
+          const res = await getMyWishlistApi();
+          
+          // Ensure res.data.data exists before mapping
+          if (res.data && res.data.data) {
+            // Extract the 'Package' object from the join result
+            const items = res.data.data
+              .filter(item => item.Package) // Safety check: skip if Package is null
+              .map(item => item.Package);
+              
+            setWishlistItems(items);
+          }
+        } catch (err) {
+          console.error("Wishlist error:", err);
+          toast.error("Couldn't load wishlist");
+        }
+      };
+      fetchWishlist();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
   const formatImageUrl = (path, isPackage = false) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
@@ -46,6 +79,8 @@ const UserDashboard = () => {
     }
     return `${backendUrl}/${cleanPath}`;
   };
+
+  const wishlistPackages = packages.filter(pkg => pkg.isWishlisted === true);
 
   if (loading) return <div className="p-20 font-bold">Loading Nepal TrekMate...</div>;
 
@@ -67,22 +102,18 @@ const UserDashboard = () => {
           </div>
         </div>
       </header>
-
-      {/* Stats Section - Kept Browse Tour as the primary action */}
       <div className="flex gap-6 mb-12">
-        <UserStatCard icon="🗺️" label="Browse Tour" onClick={() => {}} />
+        <UserStatCard icon="🗺️" label="Browse Tour" onClick={() => setActiveTab('available')} />
+        <UserStatCard icon="📋" label="My Bookings" onClick={() => setActiveTab('upcoming')} />
+        <UserStatCard icon="💰" label="History" onClick={() => setActiveTab('past')} />
       </div>
 
       <div className="flex gap-8 border-b border-slate-200 mb-10">
-        <div style={{
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#5C78C1',
-            paddingBottom: '10px',
-            borderBottom: '3px solid #5C78C1'
-        }}>
-            Available Packages
-        </div>
+        {['available', 'upcoming', 'past', 'wishlist'].map(tab => (
+          <div key={tab} style={getTabStyle(tab)} onClick={() => setActiveTab(tab)}>
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </div>
+        ))}
       </div>
 
      <div className="flex gap-8 flex-wrap">
@@ -96,6 +127,34 @@ const UserDashboard = () => {
               onClick={() => navigate(`/view-package/${pkg.id}`)}
             />
         ))}
+
+        {activeTab === 'wishlist' && (
+          wishlistItems.length > 0 ? (
+          wishlistItems.map((pkg) => (
+            <TripCard 
+                key={pkg.id}
+                title={pkg.packageName} 
+                // Using pkg directly because we mapped it in fetchWishlist
+                description={`${pkg.durationDays} Days in ${pkg.destination}`} 
+                date={`Rs. ${pkg.price}`}
+                image={formatImageUrl(pkg.packageImage, true)} 
+                isWishlisted={true} 
+                // onClick={() => navigate(`/view-package/${pkg.id}`)}
+                onClick={() => navigate(`/view-package/${pkg.id}`)} // This matches the User route
+            />
+        ))
+    ) : (
+        <div className="w-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <p className="text-slate-400 font-medium text-lg">Your wishlist is empty. Start hearting some treks!</p>
+            <button 
+                onClick={() => setActiveTab('available')}
+                className="mt-4 text-blue-600 font-bold hover:underline"
+            >
+                Browse Packages
+            </button>
+        </div>
+    )
+)}
         
         {packages.length === 0 && (
             <div className="w-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">

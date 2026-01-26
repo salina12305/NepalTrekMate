@@ -37,6 +37,19 @@ const AdminUsers = () => {
     fetchData();
   }, []);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const response = await deleteUsersById(id);
+      if (response?.status === 200 || response?.data?.success) {
+        setUsers(prev => prev.filter(u => (u._id || u.id) !== id));
+        toast.success("User deleted successfully");
+      }
+    } catch (err) {
+      toast.error("An error occurred during deletion");
+    }
+  };
+
   const filteredUsers = users.filter(user => 
     user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())

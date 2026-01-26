@@ -31,7 +31,6 @@ const AdminPackages = () => {
     localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
   );
 
-  // --- DATA FETCHING ---
   const fetchData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
     const storedUserId = localStorage.getItem('userId'); 
@@ -217,10 +216,10 @@ const AdminPackages = () => {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {loading ? (
-                  <tr><td colSpan="5" className="p-10 text-center text-slate-400">Loading...</td></tr>
-                ) : filteredPackages.length === 0 ? (
-                    <tr><td colSpan="5" className="p-10 text-center text-slate-400">No packages found.</td></tr>
-                ) : filteredPackages.map((pkg) => (
+                  <tr><td colSpan="4" className="p-10 text-center text-slate-400">Loading...</td></tr>
+                ) : packages.length === 0 ? (
+                    <tr><td colSpan="4" className="p-10 text-center text-slate-400">No packages found.</td></tr>
+                ) : packages.map((pkg) => (
                   <tr key={pkg._id || pkg.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="w-12 h-10 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
@@ -242,15 +241,6 @@ const AdminPackages = () => {
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${pkg.availability ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                         {pkg.availability ? 'Active' : 'Inactive'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                        <button 
-                          onClick={() => navigate(`/admin/view-package/${pkg._id || pkg.id}`)} 
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
                     </td>
                   </tr>
                 ))}

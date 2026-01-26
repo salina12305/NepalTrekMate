@@ -40,7 +40,6 @@ const TravelAgentDashboard = () => {
     { name: 'Wed', rev: 0 }, { name: 'Thu', rev: 0 }, { name: 'Fri', rev: 0 }, { name: 'Sat', rev: 0 }
   ]);
 
-  // fetch Logic (Mirrors Admin Dashboard Logic)
  const fetchDashboardData = useCallback(async () => {
     try {
       const userId = localStorage.getItem('userId');
@@ -169,6 +168,7 @@ const TravelAgentDashboard = () => {
             }}
             loading={loading}
         />
+
         {/* --- REVENUE TRENDS --- */}
         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm mb-8 mt-6">
           <div className="flex justify-between items-center mb-8">
