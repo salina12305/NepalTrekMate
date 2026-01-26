@@ -49,7 +49,16 @@ const ApproveAgents = () => {
     }
   };
 
-  
+  const handleReject = async (id) => {
+    if (!window.confirm("Reject this agent?")) return;
+    try {
+      await rejectUserApi(id);
+      toast.success("Agent Rejected");
+      fetchData();
+    } catch (err) {
+      toast.error("Rejection failed");
+    }
+  };
 
   const activeAgentsCount = users.filter(u => u.role === 'travelagent' && u.status === 'approved').length;
 
