@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
+import TravelAgentNotificationHandler from './components/TravelAgentNotificationHandler';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { getUserById, getAgentPackagesApi, getAllBookingsApi } from '../services/api';
+import { getUserById, getAllPackagesApi, getAllBookingsApi } from '../services/api';
 
 
 const TravelAgentDashboard = () => {
@@ -14,13 +15,31 @@ const TravelAgentDashboard = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState([]);
-  const [bookings, setBookings] = useState([]); 
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [tripStats, setTripStats] = useState({
+    total: 0,
+    confirmed: 0,
+    processing: 0,
+    canceled: 0
+  });
 
+  // --- Notification Specific States & Refs ---
+  const [showNoti, setShowNoti] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]); 
+  const dropdownRef = useRef(null);
+
+  const handleOpenNotifications = () => {
+    setShowNoti(!showNoti);
+  };
+
+  // Matching Admin's dynamic chart state structure
   const [dynamicChartData, setDynamicChartData] = useState([
     { name: 'Sun', rev: 0 }, { name: 'Mon', rev: 0 }, { name: 'Tue', rev: 0 },
     { name: 'Wed', rev: 0 }, { name: 'Thu', rev: 0 }, { name: 'Fri', rev: 0 }, { name: 'Sat', rev: 0 }
   ]);
 
+  // fetch Logic (Mirrors Admin Dashboard Logic)
  const fetchDashboardData = useCallback(async () => {
     try {
       const userId = localStorage.getItem('userId');
@@ -68,6 +87,15 @@ const TravelAgentDashboard = () => {
     }
   }, []);
 
+  useEffect(()=> {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const getWidth = (count) => {
+    if (tripStats.total === 0) return "0%";
+    return `${(count / tripStats.total) * 100}%`;
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -78,8 +106,56 @@ const TravelAgentDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
+      <TravelAgentNotificationHandler />
+
       <TravelAgentSidebar type="agent" userData={userData} />
       <main className="flex-1 p-8">
+
+        {/* --- NOTIFICATION BAR --- */}
+        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
+          <div className="relative">
+            <button 
+              onClick={handleOpenNotifications}
+              className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
+            >
+              <span className="text-xl">🔔</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNoti && (
+              <div className="absolute top-14 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden">
+                <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+                  <h4 className="font-bold text-slate-800 m-0 text-sm">Agent Notifications</h4>
+                </div>
+                <div className="max-h-[350px] overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((n, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => { setShowNoti(false); navigate(n.link); }}
+                        className="p-4 border-b border-slate-50 hover:bg-blue-50 transition-colors cursor-pointer flex gap-3"
+                      >
+                        <div className="text-xl">{n.icon}</div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800 m-0">{n.title}</p>
+                          <p className="text-[11px] text-slate-500 m-0">{n.desc}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center text-slate-400 text-xs">No notifications</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+
         <TravelAgentHeaderStatCard 
             title="Agent Intelligence"
             subtitle="Real-time system-wide performance"
