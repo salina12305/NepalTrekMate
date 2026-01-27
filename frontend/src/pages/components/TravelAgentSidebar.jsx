@@ -1,23 +1,36 @@
 import React from 'react';
 import { 
   LayoutDashboard, Users, UserCheck, Package, 
-  BookOpen, Heart, MessageSquare, DollarSign, LogOut 
+  BookOpen, Heart, LogOut 
 } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const TravelAgentSidebar = ({ type = 'admin' }) => {
   const isAdmin = type === 'admin';
+  const backendUrl = import.meta.env.VITE_API_BASE_URL; 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isActive = (path) => location.pathname === path;
+  
+  const getProfileImageUrl = () => {
+    if (!userData?.profileImage) return "/guide.png"; 
+    if (userData.profileImage.startsWith('http')) return userData.profileImage;
+    const cleanPath = userData.profileImage.startsWith('/') 
+      ? userData.profileImage.substring(1) 
+      : userData.profileImage;
+    return `${backendUrl}/${cleanPath}`; 
+  };
 
   const menuItems = isAdmin ? [
-    { icon: <LayoutDashboard size={18}/>, label: "Dashboard" },
     { icon: <Users size={18}/>, label: "Users", active: true },
     { icon: <UserCheck size={18}/>, label: "Agents" },
     { icon: <Package size={18}/>, label: "Package" },
     { icon: <BookOpen size={18}/>, label: "Booking" },
   ] : [
+    { icon: <LayoutDashboard size={18}/>, label: "Dashboard" },
     { icon: <Package size={18}/>, label: "My Packages" },
     { icon: <BookOpen size={18}/>, label: "Booking" },
     { icon: <Users size={18}/>, label: "Guide" },
-    { icon: <DollarSign size={18}/>, label: "Revenue" },
     { icon: <Heart size={18}/>, label: "Feedback" },
   ];
 
