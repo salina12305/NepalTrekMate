@@ -7,11 +7,8 @@ const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel =
   return (
     <>
       <header className="flex justify-between items-start mb-10">
-        <div>
-          <h1 className="text-3xl font-bold m-0 text-slate-800">{title}</h1>
-          <p className="text-slate-500 mt-1">{subtitle}</p>
-        </div>
-        <div className="text-3xl cursor-pointer hover:scale-110 transition-transform">🔔</div>
+        <h1 className="text-3xl font-bold m-0 text-slate-800">{title}</h1>
+        <p className="text-slate-500 mt-1">{subtitle}</p>
       </header>
 
       <div className="grid grid-cols-4 gap-4 mb-8">

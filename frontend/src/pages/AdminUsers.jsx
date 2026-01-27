@@ -1,42 +1,125 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
 import { Search } from 'lucide-react';
-import { getAllUsersApi, deleteUsersById, getUserById } from '../services/api'; 
+import { 
+  getAllUsersApi, 
+  deleteUsersById, 
+  getUserById,
+  getAllBookingsApi, 
+  getPendingRequestsApi
+} from '../services/api'; 
 import toast from 'react-hot-toast';
 
 const AdminUsers = () => {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+   // --- STATES ---
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [userData, setUserData] = useState(null);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const userId = localStorage.getItem('userId'); 
-        if (userId) {
-          const res = await getUserById(userId);
-          if (res.data) setUserData(res.data); 
-        }
-        
-        const response = await getAllUsersApi();
-        const allUsers = response.data.users || response.data;
-        if (Array.isArray(allUsers)) setUsers(allUsers);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        toast.error("Failed to connect to the server.");
-      } finally {
-        setLoading(false); 
-      }
-    };
-    fetchData();
+    // --- NOTIFICATION STATES ---
+    const [showNoti, setShowNoti] = useState(false);
+    const [pendingRequests, setPendingRequests] = useState([]);
+    const [lastViewedTime, setLastViewedTime] = useState(
+      localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
+    );
+
+      // --- REUSABLE FETCH LOGIC ---
+  const fetchAllData = useCallback(async (isAuto = false) => {
+    if (!isAuto) setLoading(true);
+    const userId = localStorage.getItem('userId'); 
+
+    try {
+      const [userProfileRes, usersRes, bookingsRes, pendingRes] = await Promise.all([
+        userId ? getUserById(userId) : Promise.resolve({ data: null }),
+        getAllUsersApi(),
+        getAllBookingsApi(),
+        getPendingRequestsApi()
+      ]);
+
+      // 1. Admin Profile
+      if (userProfileRes?.data) setUserData(userProfileRes.data);
+
+      // 2. Users List
+      const allUsers = usersRes.data.users || usersRes.data;
+      if (Array.isArray(allUsers)) setUsers(allUsers);
+
+      // 3. Pending Requests for Notifications
+      const allRequests = pendingRes.data.requests || pendingRes.data;
+      if (Array.isArray(allRequests)) setPendingRequests(allRequests);
+
+      // 4. Revenue calculation
+      const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
+      const confirmed = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
+      const calculatedRevenue = confirmed.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+      setTotalRevenue(calculatedRevenue);
+
+    } catch (err) {
+      console.error("Fetch error:", err);
+      if (!isAuto) toast.error("Failed to connect to the server.");
+    } finally {
+      setLoading(false); 
+    }
   }, []);
 
+   // --- EFFECTS ---
+   useEffect(() => {
+    fetchAllData();
+    const interval = setInterval(() => fetchAllData(true), 30000);
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowNoti(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [fetchAllData]);
+
+  // --- NOTIFICATION MIXER ---
+  const notifications = [
+    ...pendingRequests.map(req => ({
+      id: req._id,
+      time: req.createdAt,
+      title: "Agent Approval",
+      desc: `${req.fullName || 'New Agent'} applied.`,
+      icon: "💼",
+      link: "/approveagents"
+    })),
+    ...users
+      .filter(u => (new Date() - new Date(u.createdAt)) < 172800000) // Last 48h
+      .map(u => ({
+        id: u._id,
+        time: u.createdAt,
+        title: "New User",
+        desc: `${u.fullName || u.email} joined.`,
+        icon: "✨",
+        link: "/users"
+      }))
+  ].sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  const unreadCount = notifications.filter(n => new Date(n.time) > new Date(lastViewedTime)).length;
+
+  const handleOpenNotifications = () => {
+    setShowNoti(!showNoti);
+    if (!showNoti) {
+      const now = new Date().toISOString();
+      setLastViewedTime(now);
+      localStorage.setItem('adminNotiLastViewed', now);
+      fetchAllData(true); // Sync data when opening
+    }
+  };
+
+  // --- ACTION HANDLERS ---
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
@@ -60,7 +143,55 @@ const AdminUsers = () => {
       <AdminSidebar userData={userData} />
       
       <main className="flex-1 p-8">
-        {/* --- DYNAMIC HEADER & STATS SECTION (Matches Screenshot) --- */}
+       {/* --- NOTIFICATION BELL SECTION --- */}
+          <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
+          <div className="relative">
+            <button 
+              onClick={handleOpenNotifications}
+              className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
+            >
+              <span className="text-xl">🔔</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNoti && (
+              <div className="absolute top-14 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden">
+                <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                  <h4 className="font-bold text-slate-800 m-0 text-sm">Notifications</h4>
+                  <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase">
+                    {notifications.length} Total
+                  </span>
+                </div>
+                
+                <div className="max-h-[350px] overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((noti, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => { setShowNoti(false); navigate(noti.link); }}
+                        className="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition-colors cursor-pointer flex gap-3 items-start"
+                      >
+                        <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-lg">{noti.icon}</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-slate-800 m-0">{noti.title}</p>
+                          <p className="text-[11px] text-slate-500 m-0 leading-tight mt-0.5">{noti.desc}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center text-slate-400 text-xs">No recent updates</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+         {/* --- HEADER & STATS --- */}
         <AdminHeaderStatCard
           title="User Management"
           subtitle="Real-time registered users"
@@ -73,7 +204,6 @@ const AdminUsers = () => {
           }}
         />
 
-        {/* --- PRESERVED ORIGINAL TABLE CONTENT --- */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-4 bg-[#E6F4F9]/30 flex justify-between items-center border-b">
             <h3 className="font-bold text-slate-800">User Directory</h3>

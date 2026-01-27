@@ -8,9 +8,7 @@ const addUser = async (req, res) => {
         const { fullName, email, password, role } = req.body;
         
         if (!fullName || !email || !password || !role) {
-            return res.status(400).json({ 
-                message: "All fields are required" 
-            });
+            return res.status(400).json({ message: "All fields are required"});
         }
 
         const existingEmail = await User.findOne({ where: { email } });
@@ -57,47 +55,20 @@ const addUser = async (req, res) => {
                     role: newUser.role,
                     status: newUser.status 
                 }
-            });
+            }
+        );
     } catch (error) {
         console.error("Error in addUser:", error);
-        res.status(500).json({ 
-            message: "Error adding user"
-        });
+        res.status(500).json({ message: "Error adding user"});
     }
 };
 
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll({ attributes: { exclude: ["password"] } });
-        res.status(200).json({ 
-            message: "Users retrieved successfully", users 
-        });
+        res.status(200).json({message: "Users retrieved successfully", users});
     } catch (error) {
-        res.status(500).json({ 
-            message: "Error retrieving users", error: error.message 
-        });
-    }
-};
-
-const getUsersById = async (req, res) => {
-    try {
-        const id = req.params.uid;
-        const user = await User.findByPk(id);
-        if (!user) return res.status(404).json({ 
-            message: "User not found" 
-        });
-
-         return res.json({
-            id: user.id, 
-            fullName: user.fullName, 
-            email: user.email,
-            profileImage: user.profileImage 
-        });
-    } catch (error) {
-        return res.status(500).json({ 
-            message: "Error retrieving user", 
-            error: error.message 
-        });
+        res.status(500).json({message: "Error retrieving users", error: error.message});
     }
 };
 
@@ -122,6 +93,27 @@ const deleteUser  = async (req, res) =>{
             error: error.message 
         });
    }
+};
+
+const getUsersById = async (req, res) => {
+    try {
+        const id = req.params.uid;
+        const user = await User.findByPk(id);
+        if (!user) return res.status(404).json({ 
+            message: "User not found" 
+        });
+        return res.json({
+            id: user.id, 
+            fullName: user.fullName, 
+            email: user.email,
+            profileImage: user.profileImage 
+        });
+    } catch (error) {
+        return res.status(500).json({ 
+            message: "Error retrieving user", 
+            error: error.message 
+        });
+    }
 };
 
 const updateUser  = async (req, res) =>{

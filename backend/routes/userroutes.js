@@ -40,5 +40,12 @@ router.delete('/reject-user/:id',authGuard,rejectUser);
 router.post('/upload-profile', upload.single('profileImage'), uploadProfileImage);
 
 router.use('/packages', packageroutes);
-
+router.get("/get_all_guides", async (req, res) => {
+  try {
+    const guides = await guides.find({}); 
+    res.status(200).json({ success: true, guides });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching guides", error });
+  }
+});
 module.exports=router;

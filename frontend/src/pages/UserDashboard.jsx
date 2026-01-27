@@ -11,7 +11,6 @@ const UserDashboard = () => {
   const [userData, setUserData] = useState(null);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [wishlistItems, setWishlistItems] =useState([]);
 
   const backendUrl = "http://localhost:3000";

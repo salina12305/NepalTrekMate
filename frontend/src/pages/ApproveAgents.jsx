@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard';
 import toast from 'react-hot-toast';
@@ -8,37 +8,116 @@ import {
   getUserById,
   getPendingRequestsApi, 
   approveUserApi, 
-  rejectUserApi 
+  rejectUserApi,
+  getAllBookingsApi 
 } from '../services/api';
 
 const ApproveAgents = () => {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  // --- STATES ---
   const [users, setUsers] = useState([]);
   const [userData, setUserData] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
-  const fetchData = async () => {
-    setLoading(true);
+  // Notification states
+  const [showNoti, setShowNoti] = useState(false);
+  const [lastViewedTime, setLastViewedTime] = useState(
+    localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
+  );
+
+  // --- REUSABLE FETCH LOGIC ---
+  const fetchData = useCallback(async (isAuto = false) => {
+    if (!isAuto) setLoading(true);
     try {
       const userId = localStorage.getItem('userId');
-      if (userId) {
-        const profileRes = await getUserById(userId);
-        setUserData(profileRes.data);
-      }
-      const usersRes = await getAllUsersApi();
-      setUsers(usersRes.data.users || usersRes.data);
+      
+      // Parallel fetching for speed
+      const [profileRes, usersRes, pendingRes, bookingsRes] = await Promise.all([
+        userId ? getUserById(userId) : Promise.resolve({ data: null }),
+        getAllUsersApi(),
+        getPendingRequestsApi(),
+        getAllBookingsApi()
+      ]);
 
-      const pendingRes = await getPendingRequestsApi();
-      setRequests(pendingRes.data.requests || pendingRes.data);
+      if (profileRes?.data) setUserData(profileRes.data);
+      
+      const allUsers = usersRes.data.users || usersRes.data;
+      if (Array.isArray(allUsers)) setUsers(allUsers);
+
+      const allRequests = pendingRes.data.requests || pendingRes.data;
+      if (Array.isArray(allRequests)) setRequests(allRequests);
+
+      const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
+      const confirmed = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
+      const calculatedRevenue = confirmed.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+      setTotalRevenue(calculatedRevenue);
+
     } catch (err) {
-      toast.error("Error loading data");
+      console.error("Fetch Error:", err);
+      if (!isAuto) toast.error("Error loading data");
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // --- EFFECTS ---
+  useEffect(() => {
+    fetchData();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => fetchData(true), 30000);
+
+    // Click outside dropdown handler
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowNoti(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [fetchData]);
+
+  // --- NOTIFICATION MIXER ---
+  const notifications = [
+    ...requests.map(req => ({
+      id: req._id,
+      time: req.createdAt,
+      title: "Agent Approval",
+      desc: `${req.fullName || 'New Agent'} applied.`,
+      icon: "💼",
+      link: "/approveagents"
+    })),
+    ...users
+      .filter(u => (new Date() - new Date(u.createdAt)) < 172800000) // Last 48h
+      .map(u => ({
+        id: u._id,
+        time: u.createdAt,
+        title: "New User",
+        desc: `${u.fullName || u.email} joined.`,
+        icon: "✨",
+        link: "/users"
+      }))
+  ].sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  const unreadCount = notifications.filter(n => new Date(n.time) > new Date(lastViewedTime)).length;
+
+  const handleOpenNotifications = () => {
+    setShowNoti(!showNoti);
+    if (!showNoti) {
+      const now = new Date().toISOString();
+      setLastViewedTime(now);
+      localStorage.setItem('adminNotiLastViewed', now);
+      fetchData(true);
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
-
+  // --- HANDLERS ---
   const handleApprove = async (id) => {
     try {
       await approveUserApi(id);
@@ -46,6 +125,17 @@ const ApproveAgents = () => {
       fetchData(); 
     } catch (err) {
       toast.error("Approval failed");
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!window.confirm("Reject this agent?")) return;
+    try {
+      await rejectUserApi(id);
+      toast.success("Agent Rejected");
+      fetchData();
+    } catch (err) {
+      toast.error("Rejection failed");
     }
   };
 
@@ -66,8 +156,56 @@ const ApproveAgents = () => {
     <div className="flex min-h-screen bg-slate-50">
       <AdminSidebar userData={userData} />
       
-      <main className="flex-1 p-8">
-        {/* Updated Header and Stats */}
+      <main className="flex-1 p-8 relative">
+        
+        {/* --- NOTIFICATION HEADER --- */}
+        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
+          <div className="relative">
+            <button 
+              onClick={handleOpenNotifications}
+              className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
+            >
+              <span className="text-xl">🔔</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNoti && (
+              <div className="absolute top-14 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden">
+                <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                  <h4 className="font-bold text-slate-800 m-0 text-sm">Notifications</h4>
+                  <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase">
+                    {notifications.length} Total
+                  </span>
+                </div>
+                
+                <div className="max-h-[350px] overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((noti, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => { setShowNoti(false); navigate(noti.link); }}
+                        className="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition-colors cursor-pointer flex gap-3 items-start"
+                      >
+                        <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-lg">{noti.icon}</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-slate-800 m-0">{noti.title}</p>
+                          <p className="text-[11px] text-slate-500 m-0 leading-tight mt-0.5">{noti.desc}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center text-slate-400 text-xs">No updates</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <AdminHeaderStatCard 
           title="Travel Agents Approval"
           subtitle="Review and approve travel agent registrations"
@@ -76,11 +214,10 @@ const ApproveAgents = () => {
             totalUsers: users.length,
             activeAgents: activeAgentsCount,
             pending: requests.length,
-            revenue: "Rs. 0"
+            revenue: `Rs. ${totalRevenue.toLocaleString()}`
           }}
         />
 
-        {/* Keeping your exact original Approval list logic */}
         <div className="max-w-[2000px]">
           {loading ? (
             <div className="p-10 text-center">Loading requests...</div>

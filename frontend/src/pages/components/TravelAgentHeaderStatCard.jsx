@@ -12,12 +12,6 @@ const TravelAgentHeaderStatCard = ({ title, subtitle, stats, loading, label1 = "
           <h1 className="text-3xl font-bold m-0 text-slate-800">{title}</h1>
           <p className="text-slate-500 mt-1">{subtitle}</p>
         </div>
-        <div className="text-3xl cursor-pointer hover:scale-110 transition-transform relative">
-          🔔
-          {stats.notifications > 0 && (
-             <span className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full border-2 border-white"></span>
-          )}
-        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

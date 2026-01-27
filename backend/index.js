@@ -7,11 +7,11 @@ const { sequelize, connectDB }= require("./database/database");
 // 1. IMPORT MODELS (Necessary for relationships)
 const User = require("./models/usermodel");
 const Package = require("./models/packagemodel"); 
+const Booking = require("./models/bookingmodel");
 
 const app = express();
 
 app.use(express.json());
-
 app.use(cors({
     origin: 'http://localhost:5173', 
     credentials: true,               
@@ -25,7 +25,7 @@ app.use('/uploads', express.static('public/uploads'));
 // 2. DEFINE ROUTES
 app.use("/api/user/",require('./routes/userroutes'))
 app.use("/api/packages", require('./routes/packageroutes')); 
-
+app.use("/api/bookings", require('./routes/bookingroutes'));
 
 app.get("/",(req,res)=>{
     res.json({message:"Welcome to the Home Page"});
@@ -34,6 +34,26 @@ app.get("/",(req,res)=>{
 // This tells Sequelize how to link the tables in pgAdmin 4
 User.hasMany(Package, { foreignKey: 'agentId', as: 'packages' });
 Package.belongsTo(User, { foreignKey: 'agentId', as: 'agent' });
+
+// Relationships for Booking
+User.hasMany(Booking, { foreignKey: 'userId' });
+Booking.belongsTo(User, { foreignKey: 'userId' });
+
+Package.hasMany(Booking, { foreignKey: 'packageId' });
+Booking.belongsTo(Package, { foreignKey: 'packageId' });
+
+// models/index.js
+Booking.belongsTo(User, { foreignKey: 'userId' });
+Booking.belongsTo(Package, { foreignKey: 'packageId' });
+User.hasMany(Booking, { foreignKey: 'userId' });
+Package.hasMany(Booking, { foreignKey: 'packageId' });
+
+// A booking belongs to a traveler (User)
+Booking.belongsTo(User, { foreignKey: 'userId' });
+
+// A booking belongs to a guide (also a User)
+Booking.belongsTo(User, { foreignKey: 'guideId', as: 'guide' });
+User.hasMany(Booking, { foreignKey: 'guideId', as: 'guidedMissions' });
 
 const PORT = 3000;
 

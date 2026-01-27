@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
-import { Search, Eye } from 'lucide-react'; // Removed Trash2
+import { Search, Eye } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import { 
   getUserById, 
@@ -9,7 +9,7 @@ import {
   getAllUsersApi, 
   getAllBookingsApi,
   getPendingRequestsApi 
-} from '../services/api'; // Removed deletePackageApi
+} from '../services/api'; 
 import toast from 'react-hot-toast';
 
 const AdminPackages = () => {
@@ -241,6 +241,16 @@ const AdminPackages = () => {
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${pkg.availability ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                         {pkg.availability ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => navigate(`/admin/view-package/${pkg._id || pkg.id}`)} 
+                            className="text-blue-600 hover:text-blue-800"
+                            >
+                            <Eye size={18} />
+                          </button>
+                        </div>
                     </td>
                   </tr>
                 ))}

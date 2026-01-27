@@ -1,7 +1,6 @@
 import React from 'react';
 
 const GuideStatCard = ({ label, value, icon }) => {
-
   return (
     <div className="bg-[#E6F4F9] p-5 rounded-xl shadow-sm border border-slate-100 relative flex-1">
       <div className="flex justify-between items-start">
@@ -16,6 +15,3 @@ const GuideStatCard = ({ label, value, icon }) => {
 };
 
 export default GuideStatCard;
-
-
-

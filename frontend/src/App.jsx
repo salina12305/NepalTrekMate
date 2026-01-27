@@ -1,7 +1,13 @@
-
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ProtectedRoute from './protected/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
+
+// --- Components & Handlers ---
+import NotificationHandler from './pages/components/NotificationHandler';
+import TravelAgentNotificationHandler from './pages/components/TravelAgentNotificationHandler';
+import ProtectedRoute from './protected/ProtectedRoute';
+
+// --- Pages ---
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
