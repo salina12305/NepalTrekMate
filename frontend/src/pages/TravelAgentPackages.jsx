@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
 import { useNavigate } from 'react-router-dom';
-import { getUserById, getAgentPackagesApi, getAllBookingsApi } from '../services/api';
+import { getUserById, getAgentPackagesApi, getAllBookingsApi, deletePackageApi } from '../services/api';
 import { MapPin } from 'lucide-react'; 
+import toast from 'react-hot-toast';
 
 const TravelAgentPackages = () => {
   const [userData, setUserData] = useState(null);
@@ -36,6 +37,20 @@ const TravelAgentPackages = () => {
     loadPageData();
   }, [navigate]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this package?")) return;
+
+    try {
+      const response = await deletePackageApi(id);
+      if (response.data.success) {
+        setPackages(prev => prev.filter(pkg => (pkg.id || pkg._id) !== id));
+        toast.success("Package deleted successfully");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Error deleting package");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -43,6 +58,7 @@ const TravelAgentPackages = () => {
       </div>
     );
   }
+  
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -109,7 +125,14 @@ const TravelAgentPackages = () => {
                   <div className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">💰 Rs. {pkg.price}</div>
                 </div>
                 
-                {/* View, Edit, and Delete button rows have been removed */}
+                <div className="flex gap-2">
+                <button
+                    onClick={() => handleDelete(pkg.id || pkg._id)}
+                    className="flex-1 py-2 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 text-[10px] font-black uppercase rounded-xl transition-all"
+                  >
+                    Delete
+                  </button>
+                  </div>
               </div>
             ))
           ) : (
