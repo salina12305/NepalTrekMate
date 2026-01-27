@@ -70,15 +70,6 @@ const TravelAgentSidebar = ({ type = 'admin' }) => {
         ))}
       </nav>
 
-      <div className="pt-4 border-t border-cyan-200">
-        <div 
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 text-slate-600 cursor-pointer hover:text-red-500 transition-colors"
-        >
-          <LogOut size={18} />
-          <span className="text-sm font-bold">Logout</span>
-        </div>
-      </div>
     </aside>
   );
 };
