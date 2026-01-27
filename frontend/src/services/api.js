@@ -61,6 +61,15 @@ export const updatePackageById = (id, formData) =>
     });
 
 export const getAllPackagesApi = () => Api.get("/api/packages/get_all", getAuthHeader());
-export const getAllBookingsApi = () => Api.get("/api/bookings/get_all", getAuthHeader());
 
+export const createBookingApi = (data) => Api.post("/api/bookings/create", data, getAuthHeader());
+export const getMyBookingsApi = () => Api.get("/api/bookings/my-bookings", getAuthHeader());
+export const getAllBookingsApi = () => Api.get("/api/bookings/all", getAuthHeader());
+export const updateBookingStatusApi = (data) => Api.put("/api/bookings/update-status", data, getAuthHeader());
 
+export const getSinglePackageApi = (id) => Api.get(`/api/package/get_single_package/${id}`);
+export const getAllGuidesApi = () => Api.get("/api/guide/get_all_guides", getAuthHeader());
+export const getGuideAssignmentsApi = () => Api.get("/api/bookings/guide-assignments", getAuthHeader());
+
+export const toggleWishlistApi = (data) => Api.post("/api/wishlist/toggle", data, getAuthHeader());
+export const getMyWishlistApi = () => Api.get("/api/wishlist/my-wishlist", getAuthHeader());

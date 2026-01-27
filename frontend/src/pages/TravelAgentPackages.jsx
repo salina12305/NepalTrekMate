@@ -52,7 +52,6 @@ const TravelAgentPackages = () => {
     }
   };
 
-
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -127,7 +126,20 @@ const TravelAgentPackages = () => {
                   <div className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">💰 Rs. {pkg.price}</div>
                 </div>
                 <div className="flex gap-2">
-                <button
+                  <button
+                   onClick={() => navigate(`/agent/package-details/${pkg.id}`)}
+                    // onClick={() => navigate(`/view-package/${pkg.id || pkg._id}`)}
+                    className="flex-1 py-2 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 text-[10px] font-black uppercase rounded-xl transition-all"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => navigate(`/editpackages/${pkg.id || pkg._id}`)}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-800 hover:text-white text-slate-700 text-[10px] font-black uppercase rounded-xl transition-all"
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => handleDelete(pkg.id || pkg._id)}
                     className="flex-1 py-2 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 text-[10px] font-black uppercase rounded-xl transition-all"
                   >
