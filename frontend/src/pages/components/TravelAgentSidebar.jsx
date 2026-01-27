@@ -35,6 +35,12 @@ const TravelAgentSidebar = ({ type = 'admin' }) => {
     { icon: <Heart size={18}/>, label: "Feedback" },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    navigate('/login');
+  };
+
   return (
     <aside className="w-64 bg-[#E6F4F9] border-r border-cyan-100 p-6 flex flex-col h-screen sticky top-0">
       <div className="text-center mb-8">
@@ -69,7 +75,15 @@ const TravelAgentSidebar = ({ type = 'admin' }) => {
           </Link>
         ))}
       </nav>
-
+      <div className="pt-4 border-t border-cyan-200">
+        <div 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 text-slate-600 cursor-pointer hover:text-red-500 transition-colors"
+        >
+          <LogOut size={18} />
+          <span className="text-sm font-bold">Logout</span>
+        </div>
+      </div>
     </aside>
   );
 };

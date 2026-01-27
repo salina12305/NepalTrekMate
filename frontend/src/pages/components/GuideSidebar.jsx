@@ -70,7 +70,8 @@ const GuideSidebar = () => {
 
       <div className="pt-4 border-t border-cyan-200/60">
         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-red-500 transition-colors group font-bold text-sm">
-          <LogOut size={18} /> Logout
+          <LogOut size={18} /> 
+          Logout
         </button>
       </div>
     </aside>

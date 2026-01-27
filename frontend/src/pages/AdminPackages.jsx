@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
-import { Search, Eye } from 'lucide-react'; 
-import { useNavigate } from 'react-router-dom';
 import { 
   getUserById, 
   getAllPackagesApi, 
@@ -10,6 +8,7 @@ import {
   getAllBookingsApi,
   getPendingRequestsApi 
 } from '../services/api'; 
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const AdminPackages = () => {
@@ -34,6 +33,7 @@ const AdminPackages = () => {
   const fetchData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
     const storedUserId = localStorage.getItem('userId'); 
+
 
     try {
       const [packagesRes, allUsersRes, userProfileRes, bookingsRes, pendingRes] = await Promise.all([
@@ -123,7 +123,6 @@ const AdminPackages = () => {
   return (
     <div className="flex bg-slate-50 min-h-screen">
       <AdminSidebar userData={userData} />
-      
       <main className="flex-1 p-8 relative">
         
         {/* --- NOTIFICATION HEADER --- */}
@@ -173,6 +172,7 @@ const AdminPackages = () => {
           </div>
         </div>
 
+      <main className="flex-1 p-8">
         <AdminHeaderStatCard
            title="Package Management"
            subtitle="Overview of all trekking and tour experiences"
@@ -187,7 +187,6 @@ const AdminPackages = () => {
              revenue: `Rs. ${totalRevenue.toLocaleString()}`
            }}
          />
-
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
           <div className="p-4 bg-[#E6F4F9]/30 flex justify-between items-center border-b">
             <h3 className="font-bold text-slate-800">Package Directory</h3>
@@ -250,6 +249,9 @@ const AdminPackages = () => {
                             >
                             <Eye size={18} />
                           </button>
+                            <button onClick={() => handleDelete(pkg._id || pkg.id)} className="text-red-500 hover:text-red-700">
+                                <Trash2 size={18} />
+                            </button>
                         </div>
                     </td>
                   </tr>
