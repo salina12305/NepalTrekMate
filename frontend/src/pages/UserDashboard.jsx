@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { getUserById, getAllPackagesApi, getMyWishlistApi } from '../services/api';
 
-
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
@@ -79,6 +78,16 @@ const UserDashboard = () => {
     return `${backendUrl}/${cleanPath}`;
   };
 
+  const getTabStyle = (tabName) => ({
+    fontSize: '18px',
+    fontWeight: activeTab === tabName ? '600' : '500',
+    color: activeTab === tabName ? '#5C78C1' : '#666',
+    cursor: 'pointer',
+    paddingBottom: '10px',
+    borderBottom: activeTab === tabName ? '3px solid #5C78C1' : 'none',
+    transition: 'all 0.3s ease'
+  });
+
   const wishlistPackages = packages.filter(pkg => pkg.isWishlisted === true);
 
   if (loading) return <div className="p-20 font-bold">Loading Nepal TrekMate...</div>;
@@ -125,11 +134,12 @@ const UserDashboard = () => {
               image={formatImageUrl(pkg.packageImage, true)} 
               onClick={() => navigate(`/view-package/${pkg.id}`)}
             />
-        ))}
+        ))
+        }
 
         {activeTab === 'wishlist' && (
-          wishlistItems.length > 0 ? (
-          wishlistItems.map((pkg) => (
+         wishlistItems.length > 0 ? (
+           wishlistItems.map((pkg) => (
             <TripCard 
                 key={pkg.id}
                 title={pkg.packageName} 
@@ -154,12 +164,66 @@ const UserDashboard = () => {
         </div>
     )
 )}
-        
-        {packages.length === 0 && (
-            <div className="w-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <p className="text-slate-400 font-medium text-lg">No packages available at the moment.</p>
+
+  {activeTab === 'upcoming' && (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+    {bookings.length > 0 ? (
+      bookings.map((booking) => (
+        <div 
+          key={booking.id} 
+          className="bg-white rounded-[32px] p-4 shadow-sm border border-slate-100 flex items-center gap-6 h-44 hover:shadow-md transition-shadow"
+        >
+          {/* Left Side: Package Image - Fixed Square with padding */}
+          <div className="w-32 h-32 md:w-36 md:h-36 shrink-0 rounded-3xl overflow-hidden bg-slate-100">
+            <img 
+              src={formatImageUrl(booking.Package?.packageImage, true)} 
+              className="w-full h-full object-cover" 
+              alt="Trek"
+            />
+          </div>
+          
+          {/* Right Side: Booking Details */}
+          <div className="flex-1 pr-2 relative">
+            {/* Status Badge */}
+            <div className={`absolute -top-1 right-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              booking.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'
+            }`}>
+              {booking.status}
             </div>
-        )}
+            
+            <h3 className="text-xl font-black text-slate-800 mb-0.5 leading-tight">
+              {booking.Package?.packageName}
+            </h3>
+            <p className="text-slate-400 text-sm font-medium mb-4">
+              {booking.Package?.destination}
+            </p>
+            
+            <div className="flex gap-8">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</p>
+                <p className="text-sm font-bold text-slate-700">{booking.bookingDate}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Paid</p>
+                <p className="text-sm font-black text-indigo-600">Rs. {booking.totalPrice}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="col-span-full text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-slate-200">
+        <p className="text-slate-400 font-bold text-lg">No adventures planned yet!</p>
+        <button 
+          onClick={() => setActiveTab('available')}
+          className="mt-4 text-indigo-600 font-black hover:underline"
+        >
+          Explore Treks
+        </button>
+      </div>
+    )}
+  </div>
+)}
      </div>
     </div>
   );

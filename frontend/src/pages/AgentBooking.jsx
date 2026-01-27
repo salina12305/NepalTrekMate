@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
-import { Search, Eye, Calendar, User } from 'lucide-react';
+import { Search,Check,X } from 'lucide-react';
 import { getUserById, getAllBookingsApi, updateBookingStatusApi, getAgentPackagesApi } from '../services/api'; 
 import toast from 'react-hot-toast';
 
@@ -10,13 +10,14 @@ const AgentBooking = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [bookings, setBookings] = useState([]);
-  const [packagesCount, setPackagesCount] = useState(0);
+  const [packageCount, setPackagesCount] = useState(0);
 
     const fetchData = async () => {
       try {
-        const userId = localStorage.getItem('userId');
+          const userId = localStorage.getItem('userId');
           const userRes = await getUserById(userId);
           setUserData(userRes.data);
+          
           const pkgRes = await getAgentPackagesApi(userId);
           // FIX 2: Added safety checks for different response structures
           const packageList = pkgRes.data.packages || pkgRes.data.data || pkgRes.data || [];

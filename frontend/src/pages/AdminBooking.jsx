@@ -209,8 +209,19 @@ const AdminBooking = () => {
         />
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-          
-
+          <div className="p-4 bg-[#E6F4F9]/30 flex justify-between items-center border-b">
+            <h3 className="font-bold text-slate-800">Confirmed Expeditions</h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search traveler or trek..." 
+                className="pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 outline-none w-64 focus:ring-2 focus:ring-blue-400"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               {/* ... Table Header ... */}

@@ -10,7 +10,6 @@ import ProtectedRoute from './protected/ProtectedRoute';
 // --- Pages ---
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Home from './pages/Home';
 import HomePage from './pages/HomePage';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -32,7 +31,6 @@ export default function App() {
     <Router>
       <Toaster/>
       <Routes>
-        <Route path="/home" element={<Home/>}/>
         <Route path="/" element={<HomePage/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/about" element={<About/>}/>
