@@ -78,6 +78,16 @@ const UserDashboard = () => {
     return `${backendUrl}/${cleanPath}`;
   };
 
+  const getTabStyle = (tabName) => ({
+    fontSize: '18px',
+    fontWeight: activeTab === tabName ? '600' : '500',
+    color: activeTab === tabName ? '#5C78C1' : '#666',
+    cursor: 'pointer',
+    paddingBottom: '10px',
+    borderBottom: activeTab === tabName ? '3px solid #5C78C1' : 'none',
+    transition: 'all 0.3s ease'
+  });
+
   const wishlistPackages = packages.filter(pkg => pkg.isWishlisted === true);
   if (loading) return <div className="p-20 font-bold">Loading Nepal TrekMate...</div>;
 
