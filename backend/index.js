@@ -24,7 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/uploads', express.static('public/uploads'));
 
 // 2. DEFINE ROUTES
-app.use("/api/user/",require('./routes/userroutes'))
+app.use("/api/user",require('./routes/userroutes'))
 app.use("/api/packages", require('./routes/packageroutes')); 
 app.use("/api/wishlist", require('./routes/wishlistRoutes'));
 app.use("/api/bookings", require('./routes/bookingroutes'));

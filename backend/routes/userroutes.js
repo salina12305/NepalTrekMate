@@ -4,6 +4,7 @@ const upload = require('../middleware/upload');
 const packageroutes = require('./packageroutes');
 const authGuard = require("../helpers/authguard");
 const isAdmin = require("../helpers/isAdmin");
+const User = require("../models/usermodel");
 
 const { 
     addUser, 
@@ -11,7 +12,9 @@ const {
     deleteUser, 
     getUsersById, 
     loginUser,
-    uploadProfileImage
+    uploadProfileImage,
+    forgotPassword,
+    resetPassword
 } = require('../controllers/userController');
 
 const { 
@@ -25,8 +28,11 @@ const {
   adminDeleteUser 
 } = require('../controllers/adminController');
 
+
 router.post("/register", addUser);
 router.post ("/login",loginUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 router.get("/get_all_users",authGuard, getAllUsers); 
 router.get("/getUserByid/:uid", authGuard, getUsersById);

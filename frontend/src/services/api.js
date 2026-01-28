@@ -35,6 +35,8 @@ export const getAllUsersApi = () => Api.get("/api/user/get_all_users", getAuthHe
 export const deleteUsersById = (id) => Api.delete(`/api/user/delete_users/${id}`, getAuthHeader());
 export const updateUserById = (id, data) => Api.put(`/api/user/updateUserByid/${id}`, data, getAuthHeader());
 export const getAgentFeedbackApi = (agentId) => Api.get(`/api/feedback/agent/${agentId}`, getAuthHeader());
+export const forgotPasswordApi = (data) => Api.post("/api/user/forgot-password", data);
+export const resetPasswordApi = (data) => Api.post("/api/user/reset-password", data);
 
 // --- APPROVAL APIS ---
 export const getPendingRequestsApi = () => Api.get('/api/user/pending-requests', getAuthHeader());

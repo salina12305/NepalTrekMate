@@ -40,6 +40,14 @@ const User = sequelize.define(
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: 'default-avatar.png' 
+        },
+        verificationToken: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        TokenExpires: {
+            type: DataTypes.DATE,
+            allowNull: true
         }
     },
     {

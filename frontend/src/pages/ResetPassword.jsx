@@ -1,22 +1,34 @@
 import React, { useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { resetPasswordApi } from "../services/api";
+import { Link } from 'react-router-dom';
+import toast from "react-hot-toast";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token"); 
+  const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
-    setError("");
-    console.log("Password updated successfully");
-    alert("Your password has been reset successfully!");
+    try {
+      const res = await resetPasswordApi({ token, password });
+      if (res.status === 200) {
+        toast.success("Password reset successful!");
+        navigate("/login");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong");
+    }
   };
 
   return (
@@ -127,15 +139,15 @@ export default function ResetPassword() {
 
           {/* Footer Link */}
           <div className="mt-8 text-center">
-            <a 
-              href="#" 
-              className="text-sm font-bold text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Return to Login
-            </a>
+          <Link 
+            to="/login" 
+            className="text-sm font-bold text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Return to Login
+          </Link>
           </div>
         </div>
       </div>

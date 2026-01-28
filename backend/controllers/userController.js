@@ -268,6 +268,86 @@ const registerUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Saving token and 1-hour expiry to Sequelize DB
+    user.verificationToken = resetToken;
+    user.TokenExpires = new Date(Date.now() + 3600000); 
+    await user.save();
+
+    const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
+        <h2 style="color: #2563eb;">Reset Your Password</h2>
+        <p>You requested a password reset for your Nepal TrekMate account. Click the button below:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
+        </div>
+      </div>
+    `;
+
+    await sendEmail(email, "Password Reset Request - Nepal TrekMate", htmlContent);
+    res.status(200).json({ message: "Reset link sent to your email." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        if (!token || !password) {
+            return res.status(400).json({ message: "Token and new password are required" });
+        }
+
+        // 1. Find the user with the matching token AND ensure it hasn't expired
+        const user = await User.findOne({
+            where: {
+                verificationToken: token,
+                TokenExpires: {
+                    [require('sequelize').Op.gt]: new Date() // TokenExpires must be > current time
+                }
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired reset token" });
+        }
+
+        // 2. Hash the new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3. Update the user and clear the token fields
+        user.password = hashedPassword;
+        user.verificationToken = null;
+        user.TokenExpires = null;
+        await user.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Password has been reset successfully! You can now login with your new password." 
+        });
+
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+};
 
 module.exports = {
     getAllUsers,
@@ -278,5 +358,7 @@ module.exports = {
      loginUser,
      getMe,
      uploadProfileImage,
-     registerUser
+     registerUser,
+     forgotPassword,
+     resetPassword
 };

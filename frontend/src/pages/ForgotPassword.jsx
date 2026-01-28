@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-import { Link } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
+import { forgotPasswordApi } from "../services/api";
+import toast from "react-hot-toast"; 
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Reset link sent to:", email);
-    
+    try {
+      const res = await forgotPasswordApi({ email });
+      if (res.status === 200) {
+        toast.success("Reset link sent! Please check your email.");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send reset link");
+    }
   };
 
   return (
