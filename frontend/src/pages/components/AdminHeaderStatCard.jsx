@@ -2,11 +2,10 @@
 import React from 'react';
 import AdminStatCard from './AdminStatCard';
 
-// Added firstCardLabel and firstCardValue to make it flexible
 const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel = "Total Users" }) => {
   return (
     <>
-      <header className="flex justify-between items-start mb-10">
+      <header className="mb-10">
         <h1 className="text-3xl font-bold m-0 text-slate-800">{title}</h1>
         <p className="text-slate-500 mt-1">{subtitle}</p>
       </header>
@@ -14,7 +13,6 @@ const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel =
       <div className="grid grid-cols-4 gap-4 mb-8">
         <AdminStatCard 
           label={firstCardLabel} 
-          // We look for totalPackages first, if not there, use totalUsers
           value={loading ? "..." : (stats.totalPackages ?? stats.totalUsers)} 
           icon={firstCardLabel === "Total Packages" ? "📦" : "👥"} 
         />

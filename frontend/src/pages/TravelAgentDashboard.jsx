@@ -40,25 +40,28 @@ const TravelAgentDashboard = () => {
     { name: 'Wed', rev: 0 }, { name: 'Thu', rev: 0 }, { name: 'Fri', rev: 0 }, { name: 'Sat', rev: 0 }
   ]);
 
- const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const userId = localStorage.getItem('userId');
       const [userRes, pkgRes, bookingRes] = await Promise.all([
         userId ? getUserById(userId) : Promise.resolve({ data: null }),
         getAllPackagesApi(), 
-        getAllBookingsApi()  
+        getAllBookingsApi(),  
       ]);
-
+  
       if (userRes?.data) setUserData(userRes.data);
       
       const allPackages = pkgRes.data?.packages || pkgRes.data || [];
       setPackages(allPackages);
       
       const allBookings = bookingRes.data?.data || bookingRes.data || [];
-      const confirmedList = allBookings.filter(b => 
-        String(b.status || "").toLowerCase().includes('confirm')
-      );
-
+  
+      // --- UPDATED FILTER LOGIC ---
+      const confirmedList = allBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return s.includes('confirm') || s.includes('complete');
+      });
+  
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const revenueMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
       
@@ -69,17 +72,18 @@ const TravelAgentDashboard = () => {
           revenueMap[dayName] += (Number(booking.totalPrice) || 0);
         }
       });
-
+  
       setDynamicChartData(days.map(day => ({ name: day, rev: revenueMap[day] })));
       setTotalRevenue(confirmedList.reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0));
       
       setTripStats({
         total: allBookings.length,
-        confirmed: confirmedList.length,
+        // Use the updated confirmedList length here
+        confirmed: confirmedList.length, 
         processing: allBookings.filter(b => String(b.status || "").toLowerCase().includes('pend')).length,
         canceled: allBookings.filter(b => String(b.status || "").toLowerCase().includes('cancel')).length
       });
-
+  
     } catch (err) { 
       console.error("Dashboard Sync Error:", err); 
     } finally { 
@@ -110,10 +114,14 @@ const TravelAgentDashboard = () => {
 
       <TravelAgentSidebar type="agent" userData={userData} />
       <main className="flex-1 p-8">
+      <div className="flex justify-between items-center mb-8">
+      <div>
+        <h1 className="text-2xl font-black text-slate-800">Agent Intelligence</h1>
+        <p className="text-slate-500 text-sm">Real-time system-wide performance</p>
+      </div>
 
         {/* --- NOTIFICATION BAR --- */}
-        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
               className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
@@ -155,10 +163,7 @@ const TravelAgentDashboard = () => {
           </div>
         </div>
 
-
         <TravelAgentHeaderStatCard 
-            title="Agent Intelligence"
-            subtitle="Real-time system-wide performance"
             stats={{
                 totalPackages: packages.length,
                 totalBookings: tripStats.total,

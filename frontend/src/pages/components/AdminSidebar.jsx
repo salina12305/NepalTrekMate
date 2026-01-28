@@ -1,11 +1,9 @@
 import React from 'react';
-import { 
-  LayoutDashboard, Users, UserCheck, Package, 
-  BookOpen, LogOut 
-} from 'lucide-react';
+import { LayoutDashboard, Users, UserCheck, Package, BookOpen, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ userData }) => { 
   const location = useLocation(); 
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_API_BASE_URL;
@@ -57,17 +55,17 @@ const AdminSidebar = () => {
   };
 
   const menuItems = [
-    { icon: <LayoutDashboard size={18}/>, label: "Dashboard" },
-    { icon: <Users size={18}/>, label: "Users"},
-    { icon: <UserCheck size={18}/>, label: "Agents" },
-    { icon: <Package size={18}/>, label: "Package" },
-    { icon: <BookOpen size={18}/>, label: "Booking" },
+    { icon: <LayoutDashboard size={18}/>, label: "Dashboard", path: "/admindashboard" },
+    { icon: <Users size={18}/>, label: "Users", path: "/adminusers" },
+    { icon: <UserCheck size={18}/>, label: "Agents", path: "/approveagents" },
+    { icon: <Package size={18}/>, label: "Package", path: "/adminpackages" },
+    { icon: <BookOpen size={18}/>, label: "Booking", path: "/adminbookings" },
   ];
 
   return (
     <aside className="w-64 bg-[#EAF7FC] border-r border-[#D1E9F2] p-6 flex flex-col h-screen sticky top-0">
       <div className="text-center mb-8">
-        <h2 className="text-xl font-bold mb-6 text-slate-800 tracking-tight">Admin Panel</h2>
+        <h2 className="text-xl font-bold mb-6 text-slate-800">Admin Panel</h2>
         <div className="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center shadow-sm border overflow-hidden">
           <img 
             src={getProfileImageUrl()} 
@@ -96,7 +94,7 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="pt-4 border-t border-cyan-200/60">
-      <button 
+        <button 
           onClick={handleLogout} 
           className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-red-500 transition-colors group font-bold text-sm"
         >

@@ -64,14 +64,21 @@ const TravelAgentPackages = () => {
     <div className="flex min-h-screen bg-slate-50">
       <TravelAgentSidebar type="agent" userData={userData} />
       <main className="flex-1 p-8">
-        <TravelAgentHeaderStatCard
+      <TravelAgentHeaderStatCard
           title="My Packages"
           subtitle="Manage your tour offerings"
           stats={{
             totalPackages: packages.length,
-            totalBookings: bookings.filter(b => b.status === 'confirmed').length,
-            revenue: bookings.filter(b => b.status === 'confirmed')
-                             .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0),
+            // 1. UPDATE: Count confirmed AND completed bookings
+            totalBookings: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).length,
+            
+            // 2. UPDATE: Sum revenue for confirmed AND completed bookings
+            revenue: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            
             rating: "4.8",
             notifications: bookings.filter(b => b.status === 'pending').length
           }}
@@ -128,13 +135,12 @@ const TravelAgentPackages = () => {
                 <div className="flex gap-2">
                   <button
                    onClick={() => navigate(`/agent/package-details/${pkg.id}`)}
-                    // onClick={() => navigate(`/view-package/${pkg.id || pkg._id}`)}
                     className="flex-1 py-2 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 text-[10px] font-black uppercase rounded-xl transition-all"
                   >
                     View
                   </button>
                   <button
-                    onClick={() => navigate(`/editpackages/${pkg.id || pkg._id}`)}
+                    onClick={() => navigate(`/agent/edit-package/:id${pkg.id || pkg._id}`)}
                     className="flex-1 py-2 bg-slate-100 hover:bg-slate-800 hover:text-white text-slate-700 text-[10px] font-black uppercase rounded-xl transition-all"
                   >
                     Edit

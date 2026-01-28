@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
-import { Search, Eye } from 'lucide-react'; // Removed Trash2
+import { Search, Eye, Trash2 } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import { 
   getUserById, 
   getAllPackagesApi, 
+  deletePackageApi, 
   getAllUsersApi, 
   getAllBookingsApi,
   getPendingRequestsApi 
-} from '../services/api'; // Removed deletePackageApi
+} from '../services/api'; 
 import toast from 'react-hot-toast';
 
 const AdminPackages = () => {
@@ -57,8 +58,13 @@ const AdminPackages = () => {
       setPendingRequests(requests);
 
       const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const confirmed = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
-      const calculatedRevenue = confirmed.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+      const successfulBookings = allBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return s.includes('confirm') || s.includes('complete');
+      });
+      const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
+        acc + (Number(curr.totalPrice) || 0), 0
+      );
       setTotalRevenue(calculatedRevenue);
 
     } catch (err) {
@@ -116,6 +122,20 @@ const AdminPackages = () => {
     }
   };
 
+    // --- ACTION HANDLERS ---
+    const handleDelete = async (id) => {
+      if (!window.confirm("Are you sure you want to delete this package?")) return;
+      try {
+        const response = await deletePackageApi(id);
+        if (response.data.success) {
+          setPackages(prev => prev.filter(pkg => (pkg._id || pkg.id) !== id));
+          toast.success("Package deleted successfully");
+        }
+      } catch (err) {
+        toast.error("Error deleting package");
+      }
+    };
+
   const filteredPackages = packages.filter(pkg => 
     pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pkg.destination?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -127,9 +147,13 @@ const AdminPackages = () => {
       
       <main className="flex-1 p-8 relative">
         
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">Package Management</h1>
+          <p className="text-slate-500 text-sm">Overview of all trekking and tour experiences</p>
+        </div>
         {/* --- NOTIFICATION HEADER --- */}
-        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
               className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
@@ -150,6 +174,7 @@ const AdminPackages = () => {
                     {notifications.length} Total
                   </span>
                 </div>
+                
                 <div className="max-h-[350px] overflow-y-auto">
                   {notifications.length > 0 ? (
                     notifications.map((noti, idx) => (
@@ -175,8 +200,6 @@ const AdminPackages = () => {
         </div>
 
         <AdminHeaderStatCard
-           title="Package Management"
-           subtitle="Overview of all trekking and tour experiences"
            loading={loading}
            firstCardLabel="Total Packages"
            stats={{
@@ -186,7 +209,7 @@ const AdminPackages = () => {
              u.status === 'approved').length,
              pending: pendingRequests.length,
              revenue: `Rs. ${totalRevenue.toLocaleString()}`
-           }}
+            }}
          />
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
@@ -250,6 +273,9 @@ const AdminPackages = () => {
                           title="View Details"
                         >
                           <Eye size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(pkg._id || pkg.id)} className="text-red-500 hover:text-red-700">
+                          <Trash2 size={18} />
                         </button>
                     </td>
                   </tr>

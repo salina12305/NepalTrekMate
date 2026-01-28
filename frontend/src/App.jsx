@@ -36,12 +36,14 @@ import AgentBooking from './pages/AgentBooking';
 
 // User & Guide Pages
 import GuideDashboard from './pages/GuideDashboard';
+import GuideTripDetails from './pages/GuideTripDetails';
 import UserDashboard from './pages/UserDashboard';
 import UserBooking from './pages/UserBooking';
 import BookingPage from './pages/BookingPage';
 import ViewPackageDetails from './pages/ViewPackageDetails';
 import ViewPackage from './pages/ViewPackage';
-
+import PastTreks from './pages/PastTreks';
+import GuideMissions from './pages/GuideMissions';
 
 function App() {
   // Get the user role from localStorage to decide which background handler to run
@@ -103,6 +105,7 @@ function App() {
 
         {/* --- User/Guide Shared Routes --- */}
         <Route path="/guidedashboard" element={<GuideDashboard />} />
+        <Route path="/guide/trip-details/:id" element={<GuideTripDetails />} />
         <Route path="/userdashboard" element={<UserDashboard />} /> 
         <Route path="/userbooking" element={<UserBooking />} />
         <Route path="/booking" element={<BookingPage />} />
@@ -110,10 +113,11 @@ function App() {
         {/* --- User Package View (The details page) --- */}
          <Route path="/agent/package-details/:id" element={<ViewPackageDetails />} />
         <Route path="/view-package/:id" element={<ViewPackage />} />
-
+        <Route path="/guide/past-treks" element={<PastTreks />} />
+        <Route path="/guide/tours" element={<GuideMissions />} />
       </Routes>
     </Router>
   )
 }
 
-
+export default App;

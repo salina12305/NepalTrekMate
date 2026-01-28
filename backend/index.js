@@ -7,6 +7,7 @@ const { sequelize, connectDB }= require("./database/database");
 // 1. IMPORT MODELS (Necessary for relationships)
 const User = require("./models/usermodel");
 const Package = require("./models/packagemodel"); 
+const Wishlist = require("./models/wishlistmodel");
 const Booking = require("./models/bookingmodel");
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/uploads', express.static('public/uploads'));
 // 2. DEFINE ROUTES
 app.use("/api/user/",require('./routes/userroutes'))
 app.use("/api/packages", require('./routes/packageroutes')); 
+app.use("/api/wishlist", require('./routes/wishlistRoutes'));
 app.use("/api/bookings", require('./routes/bookingroutes'));
 
 app.get("/",(req,res)=>{
@@ -34,6 +36,13 @@ app.get("/",(req,res)=>{
 // This tells Sequelize how to link the tables in pgAdmin 4
 User.hasMany(Package, { foreignKey: 'agentId', as: 'packages' });
 Package.belongsTo(User, { foreignKey: 'agentId', as: 'agent' });
+
+// Relationship for Wishlist
+Package.hasMany(Wishlist, { foreignKey: 'packageId' });
+Wishlist.belongsTo(Package, { foreignKey: 'packageId' });
+
+User.hasMany(Wishlist, { foreignKey: 'userId' });
+Wishlist.belongsTo(User, { foreignKey: 'userId' });
 
 // Relationships for Booking
 User.hasMany(Booking, { foreignKey: 'userId' });

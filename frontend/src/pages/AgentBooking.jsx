@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
@@ -12,27 +13,26 @@ const AgentBooking = () => {
   const [bookings, setBookings] = useState([]);
   const [packageCount, setPackagesCount] = useState(0);
 
-    const fetchData = async () => {
-      try {
-          const userId = localStorage.getItem('userId');
-          const userRes = await getUserById(userId);
-          setUserData(userRes.data);
+  const fetchData = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const userRes = await getUserById(userId);
+      setUserData(userRes.data);
           
-          const pkgRes = await getAgentPackagesApi(userId);
-          // FIX 2: Added safety checks for different response structures
-          const packageList = pkgRes.data.packages || pkgRes.data.data || pkgRes.data || [];
-          setPackagesCount(packageList.length);
+      const pkgRes = await getAgentPackagesApi(userId);
+      const packageList = pkgRes.data.packages || pkgRes.data.data || pkgRes.data || [];
+      setPackagesCount(packageList.length);
     
-          const bookingRes = await getAllBookingsApi();
-          // FIX 3: Check if your backend sends { data: [...] } or just [...]
-          const bookingData = bookingRes.data.data || bookingRes.data.bookings || bookingRes.data || [];
-          setBookings(bookingData);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const bookingRes = await getAllBookingsApi();
+      const bookingData = bookingRes.data.data || bookingRes.data.bookings || bookingRes.data || [];
+      setBookings(bookingData);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -62,19 +62,21 @@ const AgentBooking = () => {
     <div className="flex min-h-screen bg-slate-50">
       <TravelAgentSidebar type="agent" userData={userData} />
       <main className="flex-1 p-8 overflow-y-auto">
-        <TravelAgentHeaderStatCard 
-            title="Booking Management"
-            subtitle="Track and manage your client reservations"
-            stats={{
-                totalPackages: packagesCount, 
-                totalBookings: bookings.filter(b => b.status === 'confirmed').length,
-                revenue: bookings.filter(b => b.status === 'confirmed')
-                                 .reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
-                rating: "4.8",
-                notifications: bookings.filter(b => b.status === 'pending').length
-            }}
-            loading={loading}
-        />
+      <TravelAgentHeaderStatCard 
+        title="Booking Management"
+        subtitle="Track and manage your client reservations"
+        stats={{
+          totalPackages: packageCount, 
+          // 1. Update to count both confirmed and completed bookings
+          totalBookings: bookings.filter(b => ['confirmed', 'completed'].includes(b.status)).length,     
+          // 2. Update to include revenue from both confirmed and completed bookings
+          revenue: bookings.filter(b => ['confirmed', 'completed'].includes(b.status))
+            .reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+          rating: "4.8",
+          notifications: bookings.filter(b => b.status === 'pending').length
+        }}
+        loading={loading}
+      />
 
         {/* 3. Search and Actions Bar */}
         <div className="flex justify-between items-center mb-6 gap-4">

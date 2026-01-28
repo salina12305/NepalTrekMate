@@ -34,6 +34,7 @@ export const getUserById = (id) => Api.get(`/api/user/getUserByid/${id}`, getAut
 export const getAllUsersApi = () => Api.get("/api/user/get_all_users", getAuthHeader());
 export const deleteUsersById = (id) => Api.delete(`/api/user/delete_users/${id}`, getAuthHeader());
 export const updateUserById = (id, data) => Api.put(`/api/user/updateUserByid/${id}`, data, getAuthHeader());
+export const getAgentFeedbackApi = (agentId) => Api.get(`/api/feedback/agent/${agentId}`, getAuthHeader());
 
 // --- APPROVAL APIS ---
 export const getPendingRequestsApi = () => Api.get('/api/user/pending-requests', getAuthHeader());
@@ -46,26 +47,21 @@ export const deletePackage = (id) => Api.delete(`/api/packages/delete_packages/$
 export const deletePackageApi = (id) => Api.delete(`/api/packages/delete_packages/${id}`, getAuthHeader());
 export const getAgentPackagesApi = (agentId) => 
     Api.get(`/api/packages/get-agent-packages/${agentId}`, getAuthHeader());
-export const createPackageApi = (formData) => Api.post("/api/packages/add", formData, {
-    headers: {
-        'authorization': `Bearer ${localStorage.getItem("token-37c")}`,
-        'Content-Type': undefined 
-    }
-});
-export const updatePackageById = (id, formData) => 
-    Api.put(`/api/packages/update_package/${id}`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-            'authorization': `Bearer ${localStorage.getItem('token-37c')}`
-        }
-    });
+export const createPackageApi = (formData) => {
+    const config = getAuthHeader();
+    config.headers['Content-Type'] = 'multipart/form-data'; // Use standard multipart
+    return Api.post("/api/packages/add", formData, config);
+};
+export const updatePackageById = (id, formData) => {
+    const config = getAuthHeader();
+    config.headers['Content-Type'] = 'multipart/form-data';
+    return Api.put(`/api/packages/update_package/${id}`, formData, config);
+};
 
 export const getAllPackagesApi = () => Api.get("/api/packages/get_all", getAuthHeader());
-
 export const createBookingApi = (data) => Api.post("/api/bookings/create", data, getAuthHeader());
 export const getMyBookingsApi = () => Api.get("/api/bookings/my-bookings", getAuthHeader());
 export const getAllBookingsApi = () => Api.get("/api/bookings/all", getAuthHeader());
-export const updateBookingStatusApi = (data) => Api.put("/api/bookings/update-status", data, getAuthHeader());
 
 export const getSinglePackageApi = (id) => Api.get(`/api/package/get_single_package/${id}`);
 export const getAllGuidesApi = () => Api.get("/api/guide/get_all_guides", getAuthHeader());
@@ -73,3 +69,6 @@ export const getGuideAssignmentsApi = () => Api.get("/api/bookings/guide-assignm
 
 export const toggleWishlistApi = (data) => Api.post("/api/wishlist/toggle", data, getAuthHeader());
 export const getMyWishlistApi = () => Api.get("/api/wishlist/my-wishlist", getAuthHeader());
+
+export const updateBookingStatusApi = (data) => Api.put("/api/bookings/update-status", data, getAuthHeader());
+export const getBookingByIdApi = (id) => Api.get(`/api/bookings/get_single_booking/${id}`, getAuthHeader());

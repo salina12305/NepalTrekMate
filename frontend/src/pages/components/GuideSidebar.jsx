@@ -1,79 +1,72 @@
-import React from 'react';
-import { 
-  Backpack, Calendar, History, LogOut, Star 
-} from 'lucide-react';
 
-const GuideSidebar = () => {
+import React from 'react';
+import { LayoutDashboard, History, LogOut, Star, ShieldCheck } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
+const GuideSidebar = ({ userData, averageRating, totalReviews }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_API_BASE_URL;
 
   const getProfileImageUrl = () => {
     if (!userData?.profileImage) return "/ne.png";
-    
-    if (userData.profileImage.startsWith('http')) return userData.profileImage;
-
-    const cleanPath = userData.profileImage.startsWith('/') 
-      ? userData.profileImage.substring(1) 
-      : userData.profileImage;
-      
-    return `${backendUrl}/${cleanPath}`; 
+    const base = backendUrl?.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+    const path = userData.profileImage.startsWith('/') ? userData.profileImage : `/${userData.profileImage}`;
+    return `${base}${path}`; 
   };
-  console.log("--- Sidebar Debug ---");
-  console.log("Full userData object:", userData);
-  console.log("Final Image URL:", getProfileImageUrl());
 
-  const menuItems = [
-    { icon: <Backpack size={18}/>, label: "My Tours"},
-    { icon: <Calendar size={18}/>, label: "Upcoming" },
-    { icon: <History size={18}/>, label: "History" },
-  ];
+  const handleLogout = () => {
+    toast((t) => (
+      <div className="bg-white p-4 rounded-2xl shadow-2xl border border-slate-100">
+        <p className="text-slate-800 font-bold mb-3">Leaving Basecamp?</p>
+        <div className="flex gap-2">
+          <button onClick={() => toast.dismiss(t.id)} className="bg-slate-100 px-4 py-2 rounded-xl text-sm font-bold">Stay</button>
+          <button onClick={() => { localStorage.clear(); navigate("/"); toast.dismiss(t.id); }} className="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold">Logout</button>
+        </div>
+      </div>
+    ));
+  };
 
   return (
-    <aside className="w-64 bg-[#E0F2F7] border-r border-[#CFE2E8] p-6 flex flex-col h-screen sticky top-0">
-
-      <div className="text-center mb-8">
-        <h2 className="text-xl font-bold mb-6 text-slate-800 tracking-tight">Guide Portal</h2>
-        
-        <div className="relative w-16 h-16 mx-auto mb-3">
-          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-md border-2 border-white overflow-hidden">
-            <span className="text-2xl">👤</span>
-          </div>
+    <aside className="w-72 bg-white border-r border-slate-100 p-8 flex flex-col h-screen sticky top-0">
+      <div className="mb-10 text-center">
+        <div className="relative w-24 h-24 mx-auto mb-4">
+            <div className="absolute inset-0 bg-cyan-200 rounded-full animate-pulse blur-md opacity-50"></div>
+            <div className="relative w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100">
+                <img src={getProfileImageUrl()} alt="Profile" className="w-full h-full object-cover" onError={(e)=>e.target.src="/ne.png"}/>
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-cyan-500 text-white p-1.5 rounded-full border-2 border-white">
+                <ShieldCheck size={14} />
+            </div>
         </div>
-
-        <h3 className="font-bold text-base text-slate-800 m-0">Phemba Sherpa</h3>
-        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mt-1">
-          Mountain Trekking Expert
-        </p>
         
-        <div className="flex items-center justify-center gap-1 mt-2 text-xs font-bold text-amber-600 bg-amber-50 py-1 px-2 rounded-full w-fit mx-auto">
-          <Star size={12} fill="currentColor" /> 4.2 
-          <span className="text-slate-400 font-normal ml-1">(123 tours)</span>
+        <h3 className="font-black text-slate-800 text-lg leading-tight mb-1">{userData?.fullName || "Guide"}</h3>
+        
+        <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-amber-50 rounded-full w-fit mx-auto border border-amber-100">
+          <Star size={14} className="text-amber-500 fill-amber-500" />
+          <span className="text-xs font-black text-amber-700">
+            {totalReviews > 0 ? `${averageRating} (${totalReviews})` : "Verified Guide"}
+          </span>
         </div>
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1">
-        {menuItems.map((item, index) => (
-          <div 
-          key={index} 
-          className={`
-            flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200
-            ${item.active 
-              ? 'bg-white shadow-sm text-cyan-600 font-bold' 
-              : 'hover:bg-white/50 text-slate-600 hover:text-slate-900'
-            }
-          `}
-          >
-            {item.icon}
-            <span className="text-sm">{item.label}</span>
-          </div>
+      <nav className="space-y-2 flex-1">
+        {[
+          { icon: <LayoutDashboard size={20}/>,label: "Mission Control", path: "/guidedashboard" },
+          { icon: <History size={20}/>, label: "Past Treks", path: "/guide/past-treks" },
+        ].map((item) => (
+          <Link key={item.path} to={item.path} className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all font-bold text-sm ${
+            location.pathname === item.path ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-200' : 'text-slate-500 hover:bg-slate-50'
+          }`}>
+            {item.icon} {item.label}
+          </Link>
         ))}
       </nav>
 
-      <div className="pt-4 border-t border-cyan-200/60">
-        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-red-500 transition-colors group font-bold text-sm">
-          <LogOut size={18} /> 
-          Logout
-        </button>
-      </div>
+      <button onClick={handleLogout} className="mt-auto flex items-center gap-4 px-5 py-4 text-slate-400 hover:text-red-500 transition-colors font-bold text-sm">
+        <LogOut size={20} /> Sign Out
+      </button>
     </aside>
   );
 };

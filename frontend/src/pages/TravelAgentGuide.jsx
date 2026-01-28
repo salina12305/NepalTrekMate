@@ -63,17 +63,23 @@ const TravelAgentGuide = () => {
       <TravelAgentSidebar type="agent" userData={userData} activeTab="Guide" />
 
       <main className="flex-1 p-8">
-        <TravelAgentHeaderStatCard
+      <TravelAgentHeaderStatCard
           title="Verified Guides"
           subtitle="Explore and connect with registered guides for your packages"
           label1="Total Guides" 
           stats={{
-            // totalPackages will now show the GUIDE count because label1 is "Total Guides"
             totalPackages: guides.length, 
-            // Consistent metrics from the actual bookings database
-            totalBookings: bookings.filter(b => b.status?.toLowerCase() === 'confirmed').length,
-            revenue: bookings.filter(b => b.status?.toLowerCase() === 'confirmed')
-                             .reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            
+            // 1. UPDATE: Include 'completed' in total bookings count
+            totalBookings: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).length,
+
+            // 2. UPDATE: Include 'completed' in revenue calculation
+            revenue: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            
             rating: "4.8",
             notifications: bookings.filter(b => b.status?.toLowerCase() === 'pending').length
           }}

@@ -59,8 +59,13 @@ const AdminUsers = () => {
 
       // 4. Revenue calculation
       const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const confirmed = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
-      const calculatedRevenue = confirmed.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+      const successfulBookings = allBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return s.includes('confirm') || s.includes('complete');
+      });
+      const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
+        acc + (Number(curr.totalPrice) || 0), 0
+      );
       setTotalRevenue(calculatedRevenue);
 
     } catch (err) {
@@ -143,9 +148,14 @@ const AdminUsers = () => {
       <AdminSidebar userData={userData} />
       
       <main className="flex-1 p-8">
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">User Management</h1>
+          <p className="text-slate-500 text-sm">Real-time registered users</p>
+        </div>
        {/* --- NOTIFICATION BELL SECTION --- */}
-          <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
               className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
@@ -193,14 +203,12 @@ const AdminUsers = () => {
 
          {/* --- HEADER & STATS --- */}
         <AdminHeaderStatCard
-          title="User Management"
-          subtitle="Real-time registered users"
           loading={loading}
           stats={{
             totalUsers: users.length,
             activeAgents: users.filter(u => u.role === 'travelagent' && u.status === 'approved').length,
-            pending: users.filter(u => u.status === 'pending').length,
-            revenue: "Rs. 0"
+            pending: pendingRequests.length,
+            revenue: `Rs. ${totalRevenue.toLocaleString()}`
           }}
         />
 

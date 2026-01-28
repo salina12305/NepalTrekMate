@@ -70,18 +70,25 @@ const getAllPackages = async (req, res) => {
 const getPackageById = async (req, res) => {
     try {
         const id = req.params.uid; 
+        
+        // ADD THIS CHECK: Prevent crash if ID is not a number
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid Package ID format" });
+        }
+
         const packageData = await Package.findByPk(id);
         
         if (!packageData) {
             return res.status(404).json({ message: "Package not found" });
         }
 
-        // --- Increment view count automatically ---
+        // Increment view count
         packageData.views = (packageData.views || 0) + 1;
         await packageData.save();
 
         res.json(packageData);
     } catch (error) {
+        console.error("Backend Error:", error); // Log the actual error in your terminal
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };

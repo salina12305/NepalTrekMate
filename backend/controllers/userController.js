@@ -1,14 +1,14 @@
 
-const User =require("../models/usermodel");
+const User = require("../models/usermodel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
 
 const addUser = async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
-        
+
         if (!fullName || !email || !password || !role) {
-            return res.status(400).json({ message: "All fields are required"});
+            return res.status(400).json({ message: "All fields are required" });
         }
 
         const existingEmail = await User.findOne({ where: { email } });
@@ -30,7 +30,7 @@ const addUser = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log(hashedPassword)
-        
+       
         const newUser = await User.create({
             fullName: fullName, 
             email,
@@ -38,7 +38,7 @@ const addUser = async (req, res) => {
             role,
             status: initialStatus
         });
-        res.status(201).json({ 
+        res.status(201).json({
             success: true,
             id: newUser.id,
             message: "User registered! Now upload your photo."
@@ -55,26 +55,26 @@ const addUser = async (req, res) => {
                     role: newUser.role,
                     status: newUser.status 
                 }
-            }
-        );
-    } catch (error) {
-        console.error("Error in addUser:", error);
-        res.status(500).json({ message: "Error adding user"});
-    }
-};
+            });
+
+        } catch (error) {
+            console.error("Error in addUser:", error); 
+            res.status(500).json({ message: "Error adding user" });
+        }
+    };
 
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll({ attributes: { exclude: ["password"] } });
-        res.status(200).json({message: "Users retrieved successfully", users});
+        res.status(200).json({ message: "Users retrieved successfully", users });
     } catch (error) {
-        res.status(500).json({message: "Error retrieving users", error: error.message});
+        res.status(500).json({ message: "Error retrieving users", error: error.message });
     }
 };
 
-const deleteUser  = async (req, res) =>{
+const deleteUser = async (req, res) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params; 
         const user = await User.findByPk(id);
         if (!user) {
             return res.status(404).json({
@@ -82,17 +82,17 @@ const deleteUser  = async (req, res) =>{
               message: "User not found",
             });
         }
-        await user.destroy();
-        return res.status(200).json({
+          await user.destroy();
+          return res.status(200).json({
             success:true,
-            message: "Users deleted successfully"   
+            message: "User deleted successfully",
         });
     } catch (error) {
-         return res.status(500).json({ 
-            message: "Error deleting users",
-            error: error.message 
-        });
-   }
+            return res.status(500).json({
+              message: "Error deleting user",
+              error: error.message,
+            });
+        }
 };
 
 const getUsersById = async (req, res) => {
@@ -111,20 +111,19 @@ const getUsersById = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ 
             message: "Error retrieving user", 
-            error: error.message 
-        });
+            error: error.message }
+        );
     }
 };
 
-const updateUser  = async (req, res) =>{
+const updateUser = async (req, res) => {
     try {
-        const {id} = req.params;
-        const {fullName, email, password}= req.body;
-        const user = await User.findByPk(id);
-        if (!user){
-            return res.status(404).json({
-                message:"User not found",
-            });
+        const { id } = req.params;
+        const { fullName, email, password } = req.body;
+        const user = await User.findByPk(id); 
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
         if (fullName) {
             const isexistinguser = await User.findOne({ where: { username } })
@@ -138,25 +137,28 @@ const updateUser  = async (req, res) =>{
         if (password) {
             hashedPassword = await bcrypt.hash(password, 10);
         }
+
         await user.update({
             fullName: fullName || user.fullName,
             email: email || user.email,
             password: hashedPassword,
         });
+
         return res.status(200).json({ 
+            success:true,
             message: "User updated successfully" ,
             user: {
                 id:user.id
             },
-        });
+        }); 
     }
-    } catch (error) {
-        return res.status(500).json({ 
-            message: "Error updating user", 
-            error: error.message
-        });
-    }
-}; 
+    }   catch (error) {
+          return res.status(500).json({
+             message: "Error updating user", 
+             error: error.message 
+            });
+        }
+};
 
 const loginUser=async(req,res)=>{
     try{
@@ -164,7 +166,8 @@ const loginUser=async(req,res)=>{
         const user=await User.findOne({where:{email}})
         if (!user){
             return res.status(400).json({
-            message: "Users not found!!"}) 
+              message: "Users not found!!"
+            });
         }
         if (user.role !== role) {
             return res.status(403).json({ 
@@ -184,13 +187,13 @@ const loginUser=async(req,res)=>{
             });
         }
         const token = jwt.sign(
-            {id:user.id, role:user.role, email:user.email},
-            process.env.JWT_SECRET  || "your_fallback_secret",
-            { expiresIn: "7d"}
+            { id: user.id, role: user.role, email: user.email },
+            process.env.JWT_SECRET || "your_fallback_secret", 
+            { expiresIn: "7d" }
         );
         return res.status(200).json({
-            success: true,
-            message:"User logged in successfully!",
+            success: true, 
+            message: "User logged in successfully!",
             token,
             user: { 
                 id: user.id,
@@ -198,13 +201,31 @@ const loginUser=async(req,res)=>{
                 role: user.role 
             }
         });
-    }catch(error){
+    } catch (error) {
         console.error(error);
-        return res.status(500).json({
-            success: false, error:error.message
-        });
+        return res.status(500).json({ success: false, error: error.message });
     }
 };
+
+const getMe = async (req, res) => {
+    const id=req.user.id
+    try {
+      const user = await User.findByPk(id)
+      return res.json({ 
+        success:true,user:{
+            id:user.id,
+            fullName: user.fullName,
+            email:user.email,
+            role: user.role
+        }, message: "User fetched successfully" })
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error fetching users",
+        error: error.message,
+      });
+    }
+}
+
 
 const uploadProfileImage = async (req, res) => {
     try {
@@ -223,6 +244,7 @@ const uploadProfileImage = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
 const registerUser = async (req, res) => {
     try {
@@ -247,14 +269,14 @@ const registerUser = async (req, res) => {
     }
 };
 
-module.exports={
-    getAllUsers, 
-    addUser, 
-    getUsersById, 
-    updateUser, 
+module.exports = {
+    getAllUsers,
     deleteUser, 
-    loginUser,
-    uploadProfileImage,
-    registerUser
-}
-
+    addUser,
+     getUsersById, 
+     updateUser,
+     loginUser,
+     getMe,
+     uploadProfileImage,
+     registerUser
+};

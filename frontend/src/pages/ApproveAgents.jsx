@@ -52,8 +52,13 @@ const ApproveAgents = () => {
       if (Array.isArray(allRequests)) setRequests(allRequests);
 
       const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const confirmed = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
-      const calculatedRevenue = confirmed.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+      const successfulBookings = allBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return s.includes('confirm') || s.includes('complete');
+      });
+      const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
+        acc + (Number(curr.totalPrice) || 0), 0
+      );
       setTotalRevenue(calculatedRevenue);
 
     } catch (err) {
@@ -157,10 +162,15 @@ const ApproveAgents = () => {
       <AdminSidebar userData={userData} />
       
       <main className="flex-1 p-8 relative">
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">Travel Agents Approval</h1>
+          <p className="text-slate-500 text-sm">Review and approve travel agent registrations</p>
+        </div>
         
         {/* --- NOTIFICATION HEADER --- */}
-        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+         <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
               className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
@@ -207,8 +217,6 @@ const ApproveAgents = () => {
         </div>
 
         <AdminHeaderStatCard 
-          title="Travel Agents Approval"
-          subtitle="Review and approve travel agent registrations"
           loading={loading}
           stats={{
             totalUsers: users.length,

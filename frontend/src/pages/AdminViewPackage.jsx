@@ -119,23 +119,8 @@ const AdminViewPackage = () => {
                     </div>
                 </div>
 
-                <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl">
-                    <h3 className="font-black text-lg mb-8 flex items-center gap-2 border-b border-white/10 pb-4">
-                        <Star size={20} className="text-yellow-400 fill-yellow-400" /> Analytics Summary
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-6 rounded-3xl text-center border border-white/5">
-                            <Eye className="mx-auto mb-3 text-blue-400" size={32} />
-                            <div className="text-2xl font-black">{pkg.views || 0}</div>
-                            <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">Views</div>
-                        </div>
-                        <div className="bg-white/5 p-6 rounded-3xl text-center border border-white/5">
-                            <ShoppingBag className="mx-auto mb-3 text-emerald-400" size={32} />
-                            <div className="text-2xl font-black">{pkg.bookings || 0}</div>
-                            <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">Sales</div>
-                        </div>
-                    </div>
-                </div>
+               
+                
             </div>
           </div>
         </div>

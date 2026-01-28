@@ -63,36 +63,44 @@ const AdminDashboard = () => {
         getPendingRequestsApi(),
         getAllBookingsApi()
       ]);
-
+  
       if (profileRes?.data) setUserData(profileRes.data);
       
       const allUsers = usersRes.data?.users || usersRes.data || [];
       setUsers(allUsers);
       const requests = pendingRes.data?.requests || pendingRes.data || [];
       setPendingRequests(requests);
-
+  
       const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const confirmedList = allBookings.filter(b => b.status?.toLowerCase().includes('confirm'));
+  
+      // --- UPDATED FILTER LOGIC ---
+      // Admin should see both Confirmed and Completed as "Success"
+      const confirmedList = allBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return s.includes('confirm') || s.includes('complete');
+      });
       
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const revenueMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
       
       confirmedList.forEach(booking => {
-        if (booking.createdAt) {
-          const dayName = days[new Date(booking.createdAt).getDay()];
-          revenueMap[dayName] += (booking.totalPrice || 0);
+        const rawDate = booking.createdAt || booking.bookingDate;
+        if (rawDate) {
+          const dayName = days[new Date(rawDate).getDay()];
+          revenueMap[dayName] += (Number(booking.totalPrice) || 0);
         }
       });
-
+  
       setDynamicChartData(days.map(day => ({ name: day, rev: revenueMap[day] })));
-      setTotalRevenue(confirmedList.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0));
+      setTotalRevenue(confirmedList.reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0));
+  
       setTripStats({
         total: allBookings.length,
-        confirmed: confirmedList.length,
-        processing: allBookings.filter(b => b.status?.toLowerCase().includes('pend')).length,
-        canceled: allBookings.filter(b => b.status?.toLowerCase().includes('cancel')).length
+        confirmed: confirmedList.length, // Now represents total successful trips
+        processing: allBookings.filter(b => String(b.status || "").toLowerCase().includes('pend')).length,
+        canceled: allBookings.filter(b => String(b.status || "").toLowerCase().includes('cancel')).length
       });
-
+  
     } catch (error) {
       console.error("Dashboard Sync Error:", error);
     } finally {
@@ -156,15 +164,19 @@ const AdminDashboard = () => {
       <AdminSidebar userData={userData} />
       
       <main className="flex-1 p-8 overflow-y-auto relative">
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">Admin Dashboard</h1>
+          <p className="text-slate-500 text-sm">Welcome back! Here is your real-time overview.</p>
+        </div>
         
         {/* --- NOTIFICATION BUTTON --- */}
-        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
-              className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
-            >
-              <span className="text-xl">🔔</span>
+              className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-blue-300 transition-all focus:outline-none group"            >
+              <span className="text-xl group-hover:scale-110 transition-transform inline-block">🔔</span>
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
                   {unreadCount}
@@ -221,8 +233,6 @@ const AdminDashboard = () => {
         </div>
 
         <AdminHeaderStatCard 
-          title="Admin Dashboard"
-          subtitle="Welcome back! Here is your real-time overview."
           loading={loading}
           stats={{
             totalUsers: users.length, 

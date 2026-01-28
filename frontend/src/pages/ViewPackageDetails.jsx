@@ -60,10 +60,10 @@ const ViewPackageDetails = () => {
             </button>
             <div className="flex gap-3">
                 <button 
-                    onClick={() => navigate(`/editpackages/${id}`)} 
-                    className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all"
-                >
-                    Edit This Package
+                  onClick={() => navigate(`/agent/edit-package/${id}`)} 
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all"
+                  >
+                  Edit This Package
                 </button>
             </div>
         </div>

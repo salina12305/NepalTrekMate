@@ -53,14 +53,16 @@ const AdminBooking = () => {
 
       if (userRes?.data) setUserData(userRes.data);
 
-      const allBookings = bookingsRes?.data?.data || bookingsRes?.data || [];
-      const confirmed = Array.isArray(allBookings) 
-        ? allBookings.filter(b => b?.status?.toLowerCase() === 'confirmed')
-        : [];
-      setBookings(confirmed);
+      const allBookings = bookingsRes?.data?.data || bookingsRes?.data?.bookings || bookingsRes?.data || [];
+      const successfulList = Array.isArray(allBookings) 
+      ? allBookings.filter(b => {
+          const s = b?.status?.toLowerCase() || "";
+          return s.includes('confirm') || s.includes('complete');
+        })
+      : [];
+      setBookings(successfulList);
 
-      const totalRevenue = confirmed.reduce((acc, curr) => acc + (curr?.totalPrice || 0), 0);
-
+      const totalRevenue = successfulList.reduce((acc, curr) => acc + (Number(curr?.totalPrice) || 0), 0);
       const allUsers = usersRes?.data?.users || usersRes?.data || [];
       setAllUsersList(allUsers); // Store for notifications
 
@@ -148,9 +150,14 @@ const AdminBooking = () => {
       <AdminSidebar userData={userData} />
 
       <main className="flex-1 p-8">
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">Booking Ledger</h1>
+          <p className="text-slate-500 text-sm">Real-time financial synchronization across all modules</p>
+        </div>
         {/* --- NOTIFICATION HEADER PATTERN --- */}
-        <div className="flex justify-end items-center mb-6 relative" ref={dropdownRef}>
-          <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button 
               onClick={handleOpenNotifications}
               className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all cursor-pointer z-50 focus:outline-none"
@@ -197,8 +204,6 @@ const AdminBooking = () => {
         </div>
 
         <AdminHeaderStatCard
-          title="Booking Ledger"
-          subtitle="Real-time financial synchronization across all modules"
           loading={loading}
           stats={{
             totalPackages: globalStats.totalPackages,
@@ -232,7 +237,6 @@ const AdminBooking = () => {
                   <th className="px-6 py-4">Travel Date</th>
                   <th className="px-6 py-4">Total Price</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -286,11 +290,7 @@ const AdminBooking = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex justify-center">
-                          <button className="p-2 hover:bg-indigo-50 text-indigo-600 rounded-lg transition-colors">
-                            <Eye size={18} />
-                          </button>
-                        </div>
+                        
                       </td>
                     </tr>
                   ))

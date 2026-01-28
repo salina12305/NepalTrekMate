@@ -8,5 +8,6 @@ router.get('/my-bookings', authGuard, bookingController.getMyBookings);
 router.put('/update-status', authGuard, bookingController.updateBookingStatus);
 router.get('/all', authGuard, bookingController.getAllBookings);
 router.get('/guide-assignments', authGuard, bookingController.getGuideAssignments);
+router.get("/get_single_booking/:id", authGuard, bookingController.getSingleBooking);
 
 module.exports = router;

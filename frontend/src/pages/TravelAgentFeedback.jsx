@@ -82,14 +82,21 @@ const TravelAgentFeedback = () => {
       <TravelAgentSidebar type="agent" userData={userData} activeTab="Feedback" />
 
       <main className="flex-1 p-8">
-        <TravelAgentHeaderStatCard
+      <TravelAgentHeaderStatCard
           title="Customer Feedback"
           subtitle="What travelers are saying about your tours"
           stats={{
             totalPackages: packagesCount,
-            totalBookings: bookings.filter(b => b.status?.toLowerCase() === 'confirmed').length,
-            revenue: bookings.filter(b => b.status?.toLowerCase() === 'confirmed')
-                             .reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            // 1. UPDATE: Count both confirmed and completed bookings
+            totalBookings: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).length,
+
+            // 2. UPDATE: Sum revenue for both confirmed and completed bookings
+            revenue: bookings.filter(b => 
+              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
+            ).reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            
             rating: avgRating,
             notifications: feedbacks.length
           }}
