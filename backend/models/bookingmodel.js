@@ -11,6 +11,10 @@ const Booking = sequelize.define("Booking", {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+    guideId: { 
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
     packageId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -23,8 +27,8 @@ const Booking = sequelize.define("Booking", {
         type: DataTypes.FLOAT,
         allowNull: false,
     },
-    status: {
-        type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
+    status: { 
+        type: DataTypes.STRING,
         defaultValue: 'pending',
     },
     paymentStatus: {

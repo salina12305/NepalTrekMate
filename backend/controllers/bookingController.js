@@ -4,6 +4,35 @@ const User = require('../models/usermodel');
 
 exports.createBooking = async (req, res) => {
     try {
+        const { bookingId, rating, comment } = req.body;
+        const customerId = req.user.id; // The logged-in traveler
+
+        const booking = await Booking.findByPk(bookingId);
+        
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
+        }
+
+        // 3. Create the feedback
+        const feedback = await Feedback.create({
+            bookingId: parseInt(bookingId),
+            rating: parseInt(rating),
+            comment: comment,
+            customerId: customerId, // Existing field
+            userId: customerId,     // FIX: Added this to stop the "cannot be null" error
+            guideId: booking.guideId || null, 
+            agentId: booking.agentId || null
+        });
+
+        res.status(201).json({ success: true, data: feedback });
+    } catch (error) {
+        console.error("DETAILED DATABASE ERROR:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.createBooking = async (req, res) => {
+    try {
         const { packageId, bookingDate, guideId, numberOfPeople } = req.body;
         const userId = req.user.id;
 
@@ -38,7 +67,12 @@ exports.getMyBookings = async (req, res) => {
             where: { userId: req.user.id },
             include: [
                 { model: Package },
-                { model: User, as: 'guide', attributes: ['fullName', 'email', 'profileImage'] } // Include guide details
+                { 
+                    model: User, 
+                    as: 'guide', 
+                    // ADD 'id' HERE explicitly
+                    attributes: ['id', 'fullName', 'email', 'profileImage'] 
+                }
             ],
             order: [['createdAt', 'DESC']]
         });
@@ -48,45 +82,76 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
+// exports.getGuideAssignments = async (req, res) => {
+//     try {
+//         const guideId = req.user.id;
+//         const assignments = await Booking.findAll({
+//             where: { guideId: guideId },
+//             include: [
+//                 { model: Package },
+//                 { 
+//                     model: User, // This is the Traveler
+//                     attributes: ['fullName', 'profileImage'] 
+//                 }
+//             ]
+//         });
+//         res.status(200).json({ success: true, assignments });
+exports.getGuideAssignments = async (req, res) => {
+    try {
+        const guideId = req.user.id;
+        const assignments = await Booking.findAll({
+                        where: { guideId: guideId },
+                        include: [
+                            { model: Package },
+                            { 
+                                model: User, // This is the Traveler
+                                attributes: ['fullName', 'profileImage'] 
+                            }
+                        ]
+                    });
+        res.status(200).json({ success: true, assignments }); // KEY: It sends 'assignments'
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
+// 2. Updated to handle ID from URL (req.params)
 // exports.updateBookingStatus = async (req, res) => {
 //     try {
-//         const { bookingId, status } = req.body;
+//         const { id } = req.params; // Get ID from URL
+//         const { status } = req.body; // Get status from Body
+        
+//         const booking = await Booking.findByPk(id);
+//         if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
 
-//         const booking = await Booking.findByPk(bookingId);
-//         if (!booking) {
-//             return res.status(404).json({ success: false, message: "Booking not found" });
-//         }
-
-//         booking.status = status;
+//         booking.status = status.toLowerCase(); 
 //         await booking.save();
 
-//         res.status(200).json({ 
-//             success: true, 
-//             message: `Booking has been ${status}!`,
-//             data: booking 
-//         });
+//         return res.status(200).json({ success: true, message: `Status updated to ${status}` });
 //     } catch (error) {
-//         res.status(500).json({ success: false, message: error.message });
+//         return res.status(500).json({ success: false, message: error.message });
 //     }
 // };
 
 exports.updateBookingStatus = async (req, res) => {
     try {
-        const { bookingId, status } = req.body;
-        const booking = await Booking.findByPk(bookingId);
+        // 1. Get ID from the URL parameter (/:id)
+        const { id } = req.params; 
+        // 2. Get Status from the Request Body ({status: "..."})
+        const { status } = req.body;
+
+        const booking = await Booking.findByPk(id);
 
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found" });
         }
 
         booking.status = status;
-        await booking.save(); // This is where "COMPLETED" vs "completed" fails
+        await booking.save();
 
         return res.status(200).json({ success: true, message: "Status updated" });
     } catch (error) {
         console.error("DB Error:", error.message);
-        // Use a return here to stop execution and prevent "Headers already sent"
         if (!res.headersSent) {
             return res.status(500).json({ success: false, message: error.message });
         }
@@ -109,36 +174,6 @@ exports.getAllBookings = async (req, res) => {
     }
 };
 
-exports.getGuideAssignments = async (req, res) => {
-    try {
-        const guideId = req.user.id; 
-        console.log("Backend: Fetching assignments for Guide ID:", guideId); // DEBUG LOG 1
-
-        const assignments = await Booking.findAll({
-            where: { 
-                guideId: guideId, // Ensure this matches Baagoo's ID (which is 5)
-                status: ['confirmed', 'completed', 'pending', 'approved']
-            },
-            include: [
-                { 
-                    model: Package, 
-                    attributes: ['packageName', 'destination', 'packageImage', 'price'] 
-                },
-                { 
-                    model: User, 
-                    attributes: ['fullName', 'email', 'profileImage'] 
-                }
-            ],
-            order: [['bookingDate', 'ASC']]
-        });
-
-        console.log("Backend: Found assignments count:", assignments.length); // DEBUG LOG 2
-        res.status(200).json({ success: true, data: assignments });
-    } catch (error) {
-        console.error("Backend Error:", error.message);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
 
 exports.getSingleBooking = async (req, res) => {
     try {
@@ -160,3 +195,47 @@ exports.getSingleBooking = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+exports.completeBooking = async (req, res) => {
+    try {
+        const { id } = req.params; // Booking ID
+        const booking = await Booking.findByPk(id);
+
+        if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+        // Update status to COMPLETED
+        booking.status = 'COMPLETED';
+        await booking.save();
+
+        res.status(200).json({ success: true, message: "Trip marked as completed!" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+
+exports.getGuideStats = async (req, res) => {
+    try {
+        const guideId = req.user.id; 
+
+        // 1. Count finished trips
+        const totalTrips = await Booking.count({
+            where: { guideId: guideId, status: 'finished' }
+        });
+
+        // 2. Sum up earnings
+        const totalEarnings = await Booking.sum('totalPrice', {
+            where: { guideId: guideId, status: 'finished' }
+        }) || 0;
+
+        res.status(200).json({
+            success: true,
+            totalTrips,
+            earnings: totalEarnings,
+            averageRating: 4.8 // Placeholder
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

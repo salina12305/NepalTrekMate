@@ -53,6 +53,12 @@ const AdminDashboard = () => {
     return `${Math.floor(hours / 24)}d ago`;
   };
 
+  // Helper for status sync
+  const isSuccessful = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes('confirm') || s.includes('complete') || s.includes('finish');
+  };
+
   // --- FETCH LOGIC ---
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -72,13 +78,8 @@ const AdminDashboard = () => {
       setPendingRequests(requests);
   
       const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-  
-      // --- UPDATED FILTER LOGIC ---
-      // Admin should see both Confirmed and Completed as "Success"
-      const confirmedList = allBookings.filter(b => {
-        const s = String(b.status || "").toLowerCase();
-        return s.includes('confirm') || s.includes('complete');
-      });
+
+      const confirmedList = allBookings.filter(b => isSuccessful(b.status));
       
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const revenueMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };

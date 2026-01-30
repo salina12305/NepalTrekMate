@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeaderStatCard from './components/AdminHeaderStatCard'; 
-import { Search } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import { 
   getAllUsersApi, 
   deleteUsersById, 
@@ -33,6 +33,12 @@ const AdminUsers = () => {
       localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
     );
 
+    // --- HELPER FOR REVENUE SYNC ---
+  const isSuccessful = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes('confirm') || s.includes('complete') || s.includes('finish');
+  };
+
       // --- REUSABLE FETCH LOGIC ---
   const fetchAllData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
@@ -58,11 +64,9 @@ const AdminUsers = () => {
       if (Array.isArray(allRequests)) setPendingRequests(allRequests);
 
       // 4. Revenue calculation
-      const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const successfulBookings = allBookings.filter(b => {
-        const s = String(b.status || "").toLowerCase();
-        return s.includes('confirm') || s.includes('complete');
-      });
+      const allBookings = bookingsRes.data?.data || bookingsRes.data?.bookings || bookingsRes.data || [];
+      const successfulBookings = allBookings.filter(b => isSuccessful(b.status));
+      
       const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
         acc + (Number(curr.totalPrice) || 0), 0
       );
@@ -124,17 +128,55 @@ const AdminUsers = () => {
     }
   };
 
-  // --- ACTION HANDLERS ---
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+  const handleDelete = (id) => {
+    // Use a custom toast with "Confirm" and "Cancel" buttons
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span className="text-sm font-medium text-slate-800">
+          Are you sure you want to <b>delete</b> this user?
+        </span>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-bold transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id); // Close confirmation toast
+              await executeDeletion(id); // Run actual API call
+            }}
+            className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition-all shadow-sm"
+          >
+            Delete User
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000, // Give user time to decide
+      position: 'top-center',
+      style: {
+        padding: '16px',
+        borderRadius: '16px',
+        border: '1px solid #fee2e2'
+      }
+    });
+  };
+  
+  // Separate the API logic for cleaner code
+  const executeDeletion = async (id) => {
+    const loadingToast = toast.loading("Processing deletion...");
     try {
       const response = await deleteUsersById(id);
       if (response?.status === 200 || response?.data?.success) {
         setUsers(prev => prev.filter(u => (u._id || u.id) !== id));
-        toast.success("User deleted successfully");
+        toast.success("User removed from database", { id: loadingToast });
+      } else {
+        throw new Error("Failed");
       }
     } catch (err) {
-      toast.error("An error occurred during deletion");
+      toast.error("Could not delete user. Try again.", { id: loadingToast });
     }
   };
 

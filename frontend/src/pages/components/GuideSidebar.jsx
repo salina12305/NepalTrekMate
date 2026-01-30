@@ -1,19 +1,18 @@
-
 import React from 'react';
-import { LayoutDashboard, History, LogOut, Star, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, History, LogOut, Star, ShieldCheck, MessageSquare } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const GuideSidebar = ({ userData, averageRating, totalReviews }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const backendUrl = import.meta.env.VITE_API_BASE_URL;
+  const backendUrl = "http://localhost:3000";
 
   const getProfileImageUrl = () => {
     if (!userData?.profileImage) return "/ne.png";
-    const base = backendUrl?.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
-    const path = userData.profileImage.startsWith('/') ? userData.profileImage : `/${userData.profileImage}`;
-    return `${base}${path}`; 
+    if (userData.profileImage.startsWith('http')) return userData.profileImage;
+    const cleanPath = userData.profileImage.startsWith('/') ? userData.profileImage.substring(1) : userData.profileImage;
+    return `${backendUrl}/${cleanPath}`; 
   };
 
   const handleLogout = () => {
@@ -40,9 +39,7 @@ const GuideSidebar = ({ userData, averageRating, totalReviews }) => {
                 <ShieldCheck size={14} />
             </div>
         </div>
-        
         <h3 className="font-black text-slate-800 text-lg leading-tight mb-1">{userData?.fullName || "Guide"}</h3>
-        
         <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-amber-50 rounded-full w-fit mx-auto border border-amber-100">
           <Star size={14} className="text-amber-500 fill-amber-500" />
           <span className="text-xs font-black text-amber-700">
@@ -53,11 +50,12 @@ const GuideSidebar = ({ userData, averageRating, totalReviews }) => {
 
       <nav className="space-y-2 flex-1">
         {[
-          { icon: <LayoutDashboard size={20}/>,label: "Mission Control", path: "/guidedashboard" },
-          { icon: <History size={20}/>, label: "Past Treks", path: "/guide/past-treks" },
+          { icon: <LayoutDashboard size={20}/>, label: "Mission Control", path: "/guidedashboard" },
+          { icon: <History size={20}/>, label: "Past Treks", path: "/guide/history" },
+          { icon: <MessageSquare size={20}/>, label: "Guest Reviews", path: "/guide/feedback" },
         ].map((item) => (
           <Link key={item.path} to={item.path} className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all font-bold text-sm ${
-            location.pathname === item.path ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-200' : 'text-slate-500 hover:bg-slate-50'
+            location.pathname === item.path ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
           }`}>
             {item.icon} {item.label}
           </Link>

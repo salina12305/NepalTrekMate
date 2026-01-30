@@ -32,6 +32,12 @@ const AdminPackages = () => {
     localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
   );
 
+  // Helper for status filtering (Admin sees global success)
+  const isSuccessful = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes('confirm') || s.includes('complete') || s.includes('finish');
+  };
+
   // --- DATA FETCHING ---
   const fetchData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
@@ -57,14 +63,14 @@ const AdminPackages = () => {
       const requests = pendingRes.data.requests || pendingRes.data || [];
       setPendingRequests(requests);
 
-      const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const successfulBookings = allBookings.filter(b => {
-        const s = String(b.status || "").toLowerCase();
-        return s.includes('confirm') || s.includes('complete');
-      });
+      const allBookings = bookingsRes.data?.data || bookingsRes.data?.bookings || bookingsRes.data || [];
+      
+      const successfulBookings = allBookings.filter(b => isSuccessful(b.status));
+      
       const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
         acc + (Number(curr.totalPrice) || 0), 0
       );
+      
       setTotalRevenue(calculatedRevenue);
 
     } catch (err) {
@@ -123,18 +129,56 @@ const AdminPackages = () => {
   };
 
     // --- ACTION HANDLERS ---
-    const handleDelete = async (id) => {
-      if (!window.confirm("Are you sure you want to delete this package?")) return;
-      try {
-        const response = await deletePackageApi(id);
-        if (response.data.success) {
-          setPackages(prev => prev.filter(pkg => (pkg._id || pkg.id) !== id));
-          toast.success("Package deleted successfully");
-        }
-      } catch (err) {
-        toast.error("Error deleting package");
+    // --- UPDATED ACTION HANDLER ---
+  const handleDelete = (id) => {
+    // Stage 1: The UI Confirmation Toast
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-bold text-slate-800">Remove this package?</p>
+        <p className="text-[11px] text-slate-500 leading-tight">
+          This will hide the tour from users. Ensure no active bookings exist.
+        </p>
+        <div className="flex gap-2 mt-2 justify-end">
+          <button 
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await executePackageDelete(id); // Move to the actual deletion logic
+            }}
+            className="px-3 py-1.5 bg-rose-500 text-white text-[10px] font-black uppercase rounded-lg shadow-sm hover:bg-rose-600 transition-all"
+          >
+            Confirm Delete
+          </button>
+        </div>
+      </div>
+    ), { 
+      duration: 6000,
+      position: 'top-center',
+    });
+  };
+
+  // Stage 2: The API Logic
+  const executePackageDelete = async (id) => {
+    const loadingToast = toast.loading("Updating records...");
+    try {
+      const response = await deletePackageApi(id);
+      // Check for success (adjust based on your API response structure)
+      if (response.data.success || response.status === 200) {
+        setPackages(prev => prev.filter(pkg => (pkg._id || pkg.id) !== id));
+        toast.success("Package successfully removed", { id: loadingToast });
+      } else {
+        throw new Error("Deletion failed");
       }
-    };
+    } catch (err) {
+      console.error(err);
+      toast.error("Error: Could not delete package.", { id: loadingToast });
+    }
+  };
 
   const filteredPackages = packages.filter(pkg => 
     pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||

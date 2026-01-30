@@ -2,6 +2,7 @@
 const router= require("express").Router();
 const upload = require('../middleware/upload');
 const packageroutes = require('./packageroutes');
+const bookingController = require('../controllers/bookingController');
 const authGuard = require("../helpers/authguard");
 const isAdmin = require("../helpers/isAdmin");
 const User = require("../models/usermodel");
@@ -54,4 +55,6 @@ router.get("/get_all_guides", async (req, res) => {
     res.status(500).json({ message: "Error fetching guides", error });
   }
 });
+
+router.get('/guide-stats', authGuard, bookingController.getGuideStats);
 module.exports=router;

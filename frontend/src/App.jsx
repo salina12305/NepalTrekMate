@@ -15,6 +15,8 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import RateGuide from './pages/RateGuide';
+import GuideProfile from './pages/GuideProfile';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -24,6 +26,7 @@ import ActivePartners from './pages/ActivePartners';
 import AdminBooking from './pages/AdminBooking';
 import AdminPackages from './pages/AdminPackages';
 import AdminViewPackage from './pages/AdminViewPackage';
+import AdminUserDetails from './pages/AdminUserDetails';
 
 // Travel Agent Pages
 import TravelAgentDashboard from './pages/TravelAgentDashboard';
@@ -44,6 +47,10 @@ import ViewPackageDetails from './pages/ViewPackageDetails';
 import ViewPackage from './pages/ViewPackage';
 import PastTreks from './pages/PastTreks';
 import GuideMissions from './pages/GuideMissions';
+import GuideHistory from './pages/GuideHistory';
+import GuideFeedback from './pages/GuideFeedback';
+import RateService from './pages/RateService';
+import RatePackage from './pages/RatePackage';
 
 function App() {
   // Get the user role from localStorage to decide which background handler to run
@@ -51,7 +58,6 @@ function App() {
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-    {/* 1. Global Toaster UI for all notifications */}
     <Toaster 
       position="top-right" 
       reverseOrder={false} 
@@ -67,7 +73,7 @@ function App() {
     
     {/* 2. Conditional Notification Handlers based on Role */}
     {userRole === 'admin' && <NotificationHandler />}
-    {userRole === 'travelagent' && <TravelAgentNotificationHandler />}
+    {/* {userRole === 'travelagent' && <TravelAgentNotificationHandler />} */}
 
       <Routes>
 
@@ -79,6 +85,9 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/uploadimage" element={<UploadImage />} /> 
+        <Route path="/rate-guide" element={<RateGuide />} />
+        <Route path="/rate-package" element={<RatePackage />} />
+        <Route path="/guide-profile/:id" element={<GuideProfile />} />
 
         {/* --- Admin Protected Routes --- */}
         <Route path="/admindashboard" element={
@@ -90,6 +99,7 @@ function App() {
         <Route path="/adminbookings" element={<AdminBooking />} />
         <Route path="/adminpackages" element={<AdminPackages />} />
         <Route path="/admin/view-package/:id" element={<AdminViewPackage />} />
+        <Route path="/admin/user/:id" element={<AdminUserDetails />} />
 
         {/* --- Travel Agent Protected Routes --- */}
         <Route path="/travelagentdashboard" element={
@@ -105,16 +115,20 @@ function App() {
 
         {/* --- User/Guide Shared Routes --- */}
         <Route path="/guidedashboard" element={<GuideDashboard />} />
+        <Route path="/guide/feedback" element={<GuideFeedback />} />
         <Route path="/guide/trip-details/:id" element={<GuideTripDetails />} />
         <Route path="/userdashboard" element={<UserDashboard />} /> 
         <Route path="/userbooking" element={<UserBooking />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/rate-guide/:id" element={<RateService />} />
+        <Route path="/rate-package/:id" element={<RateService />} />  
 
         {/* --- User Package View (The details page) --- */}
          <Route path="/agent/package-details/:id" element={<ViewPackageDetails />} />
         <Route path="/view-package/:id" element={<ViewPackage />} />
         <Route path="/guide/past-treks" element={<PastTreks />} />
         <Route path="/guide/tours" element={<GuideMissions />} />
+        <Route path="/guide/history" element={<GuideHistory />} />
       </Routes>
     </Router>
   )

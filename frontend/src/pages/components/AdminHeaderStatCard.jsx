@@ -3,6 +3,21 @@ import React from 'react';
 import AdminStatCard from './AdminStatCard';
 
 const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel = "Total Users" }) => {
+
+  // Dynamic logic to pick the value for the first card
+  const getFirstCardValue = () => {
+    if (loading) return "...";
+    if (firstCardLabel === "Total Bookings") return stats.totalBookings;
+    if (firstCardLabel === "Total Packages") return stats.totalPackages;
+    return stats.totalUsers;
+  };
+
+  // Dynamic icon logic
+  const getIcon = () => {
+    if (firstCardLabel === "Total Bookings") return "🎫";
+    if (firstCardLabel === "Total Packages") return "📦";
+    return "👥";
+  };
   return (
     <>
       <header className="mb-10">
@@ -13,8 +28,8 @@ const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel =
       <div className="grid grid-cols-4 gap-4 mb-8">
         <AdminStatCard 
           label={firstCardLabel} 
-          value={loading ? "..." : (stats.totalPackages ?? stats.totalUsers)} 
-          icon={firstCardLabel === "Total Packages" ? "📦" : "👥"} 
+          value={getFirstCardValue()} 
+          icon={getIcon()} 
         />
         <AdminStatCard 
           label="Active Agents" 
@@ -23,7 +38,7 @@ const AdminHeaderStatCard = ({ title, subtitle, stats, loading, firstCardLabel =
         />
         <AdminStatCard 
           label="Total Revenue" 
-          value={stats.revenue || "Rs. 0"} 
+          value={loading ? "..." : (typeof stats.revenue === 'number' ? `Rs. ${stats.revenue.toLocaleString()}` : stats.revenue)} 
           icon="💰" 
         />
         <AdminStatCard 

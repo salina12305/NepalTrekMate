@@ -29,6 +29,12 @@ const ApproveAgents = () => {
     localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
   );
 
+  // --- HELPER FOR REVENUE SYNC ---
+  const isSuccessful = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes('confirm') || s.includes('complete') || s.includes('finish');
+  };
+
   // --- REUSABLE FETCH LOGIC ---
   const fetchData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
@@ -51,16 +57,13 @@ const ApproveAgents = () => {
       const allRequests = pendingRes.data.requests || pendingRes.data;
       if (Array.isArray(allRequests)) setRequests(allRequests);
 
-      const allBookings = bookingsRes.data?.data || bookingsRes.data || [];
-      const successfulBookings = allBookings.filter(b => {
-        const s = String(b.status || "").toLowerCase();
-        return s.includes('confirm') || s.includes('complete');
-      });
+      const allBookings = bookingsRes.data?.data || bookingsRes.data?.bookings || bookingsRes.data || [];
+      const successfulBookings = allBookings.filter(b => isSuccessful(b.status));
+      
       const calculatedRevenue = successfulBookings.reduce((acc, curr) => 
         acc + (Number(curr.totalPrice) || 0), 0
       );
       setTotalRevenue(calculatedRevenue);
-
     } catch (err) {
       console.error("Fetch Error:", err);
       if (!isAuto) toast.error("Error loading data");
@@ -285,9 +288,12 @@ const ApproveAgents = () => {
                   >
                     Reject
                   </button>
-                  <button className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg cursor-pointer font-bold transition-colors">
-                    View Details
-                  </button>
+                  <button 
+      onClick={() => navigate(`/admin/user/${agent._id || agent.id}`)}
+      className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg cursor-pointer font-bold transition-colors"
+    >
+      View Details
+    </button>
                 </div>
               </div>
             )

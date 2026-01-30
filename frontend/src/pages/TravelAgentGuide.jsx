@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TravelAgentSidebar from './components/TravelAgentSidebar';
 import TravelAgentHeaderStatCard from './components/TravelAgentHeaderStatCard';
-// ADDED getAllBookingsApi and getAgentPackagesApi to the imports
-import { getUserById, getAllUsersApi, getAllBookingsApi, getAgentPackagesApi } from '../services/api';
+import { getUserById, getAllUsersApi, getAllBookingsApi, getAgentPackagesApi, getAgentFeedbackApi } from '../services/api';
 import { User, ShieldCheck, Mail, Briefcase } from 'lucide-react';
 import toast from "react-hot-toast";
 
@@ -11,8 +10,9 @@ const TravelAgentGuide = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [guides, setGuides] = useState([]);
-  const [bookings, setBookings] = useState([]); // Real data for the header
-  const [packagesCount, setPackagesCount] = useState(0); // Real count for the header
+  const [bookings, setBookings] = useState([]); 
+  const [packagesCount, setPackagesCount] = useState(0);
+  const [avgRating, setAvgRating] = useState("0.0");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,34 +21,56 @@ const TravelAgentGuide = () => {
       if (!userId) return navigate('/login');
 
       try {
-        // 1. Get Logged-in Agent Profile
-        const userRes = await getUserById(userId);
-        setUserData(userRes.data);
+        
+        const [userRes, pkgRes, bookingRes, allUsersRes, feedbackRes] = await Promise.allSettled([
+          getUserById(userId),
+          getAgentPackagesApi(userId),
+          getAllBookingsApi(),
+          getAllUsersApi(),
+          getAgentFeedbackApi(userId) 
+        ]);
 
-        // 2. Fetch Packages for header consistency
-        const pkgRes = await getAgentPackagesApi(userId);
-        setPackagesCount(pkgRes.data.packages?.length || 0);
+        if (userRes.status === 'fulfilled') setUserData(userRes.value.data);
+        
+        if (pkgRes.status === 'fulfilled') {
+          const pData = pkgRes.value.data.packages || pkgRes.value.data || [];
+          setPackagesCount(pData.length);
+        }
 
-        // 3. Fetch Bookings for header consistency
-        const bookingRes = await getAllBookingsApi();
-        const bookingData = bookingRes.data.data || bookingRes.data.bookings || bookingRes.data || [];
-        setBookings(bookingData);
+        if (bookingRes.status === 'fulfilled') {
+          const rawData = bookingRes.value.data.data || bookingRes.value.data.bookings || bookingRes.value.data || [];
 
-        // 4. Fetch Guides
-        const allUsersRes = await getAllUsersApi(); 
-        const allUsers = allUsersRes.data.users || allUsersRes.data || [];
-        const registeredGuides = allUsers.filter(u => u.role === 'guide');
-        setGuides(registeredGuides);
+          const myBookings = rawData.filter(b => {
+            const bId = b.agentId || b.agent?._id || b.agent;
+            const pId = b.Package?.agentId || b.package?.agentId || b.Package?.agent?._id;
+            return String(bId) === String(userId) || String(pId) === String(userId);
+        });
+        setBookings(myBookings);
+      }
+
+        if (allUsersRes.status === 'fulfilled') {
+            const allUsers = allUsersRes.value.data.users || allUsersRes.value.data || [];
+            setGuides(allUsers.filter(u => u.role === 'guide'));
+        }
+
+        if (feedbackRes.status === 'fulfilled') {
+            const fbData = feedbackRes.value.data.feedbacks || [];
+            if (fbData.length > 0) {
+                const total = fbData.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
+                setAvgRating((total / fbData.length).toFixed(1));
+            }
+        }
 
       } catch (err) {
-        console.error("Error loading guides page data:", err);
-        // toast.error("Failed to fetch data");
+        console.error("Error loading data:", err);
       } finally {
         setLoading(false);
       }
     };
     loadPageData();
   }, [navigate]);
+
+  const isSuccessful = (status) => ['confirmed', 'completed', 'finished'].includes(String(status).toLowerCase());
 
   if (loading) {
     return (
@@ -63,25 +85,17 @@ const TravelAgentGuide = () => {
       <TravelAgentSidebar type="agent" userData={userData} activeTab="Guide" />
 
       <main className="flex-1 p-8">
-      <TravelAgentHeaderStatCard
+        <TravelAgentHeaderStatCard
           title="Verified Guides"
           subtitle="Explore and connect with registered guides for your packages"
           label1="Total Guides" 
           stats={{
-            totalPackages: guides.length, 
-            
-            // 1. UPDATE: Include 'completed' in total bookings count
-            totalBookings: bookings.filter(b => 
-              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
-            ).length,
-
-            // 2. UPDATE: Include 'completed' in revenue calculation
-            revenue: bookings.filter(b => 
-              ['confirmed', 'completed'].includes(b.status?.toLowerCase())
-            ).reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
-            
-            rating: "4.8",
-            notifications: bookings.filter(b => b.status?.toLowerCase() === 'pending').length
+            totalPackages: packagesCount, 
+            totalBookings: bookings.filter(b => isSuccessful(b.status)).length,
+            revenue: bookings.filter(b => isSuccessful(b.status))
+                .reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0),
+            rating: avgRating,
+            notifications: bookings.filter(b => String(b.status).toLowerCase() === 'pending').length
           }}
           loading={loading}
         />
@@ -125,7 +139,12 @@ const TravelAgentGuide = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button onClick={() => navigate(`/guide-profile/${guide.id}`)} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase rounded-xl transition-all shadow-md shadow-blue-100">View Profile</button>
+                <button 
+                  onClick={() => navigate(`/guide-profile/${guide._id || guide.id}`)} 
+                  className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase rounded-xl transition-all shadow-md shadow-blue-100"
+                  >
+                  View Profile
+                </button>
                   <a href={`mailto:${guide.email}`} className="p-2 bg-slate-100 hover:bg-slate-800 hover:text-white text-slate-600 rounded-xl transition-all flex items-center justify-center"><Mail size={16} /></a>
                 </div>
               </div>

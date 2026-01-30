@@ -8,7 +8,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { getUserById, getAllPackagesApi, getAllBookingsApi } from '../services/api';
+import { getUserById, getAllPackagesApi, getAllBookingsApi, getAgentFeedbackApi } from '../services/api';
 
 
 const TravelAgentDashboard = () => {
@@ -17,6 +17,7 @@ const TravelAgentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [avgRating, setAvgRating] = useState("0.0");
   const [tripStats, setTripStats] = useState({
     total: 0,
     confirmed: 0,
@@ -43,25 +44,37 @@ const TravelAgentDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       const userId = localStorage.getItem('userId');
-      const [userRes, pkgRes, bookingRes] = await Promise.all([
+      const [userRes, pkgRes, bookingRes, feedbackRes] = await Promise.all([
         userId ? getUserById(userId) : Promise.resolve({ data: null }),
         getAllPackagesApi(), 
-        getAllBookingsApi(),  
+        getAllBookingsApi(), 
+        userId ? getAgentFeedbackApi(userId) : Promise.resolve({ data: { feedbacks: [] } }), 
       ]);
   
       if (userRes?.data) setUserData(userRes.data);
       
+      // 1. Filter Packages for this agent
       const allPackages = pkgRes.data?.packages || pkgRes.data || [];
-      setPackages(allPackages);
+      const myPackages = allPackages.filter(p => String(p.agentId || p.agent?._id || p.agent) === String(userId));
+      setPackages(myPackages);
       
-      const allBookings = bookingRes.data?.data || bookingRes.data || [];
-  
-      // --- UPDATED FILTER LOGIC ---
-      const confirmedList = allBookings.filter(b => {
-        const s = String(b.status || "").toLowerCase();
-        return s.includes('confirm') || s.includes('complete');
+      // 2. Filter Bookings for this agent
+      const allBookings = bookingRes.data?.data || bookingRes.data?.bookings || bookingRes.data || [];
+      const myBookings = allBookings.filter(b => {
+        const bAgentId = b.agentId || b.agent?._id || b.agent;
+        const pAgentId = b.Package?.agentId || b.Package?.agent?._id || b.Package?.agent || b.package?.agentId;
+        return String(bAgentId) === String(userId) || String(pAgentId) === String(userId);
       });
   
+      // 3. Define Successful Statuses (Revenue generating)
+      const successfulStatuses = ['confirmed', 'complete', 'completed', 'finished'];
+      
+      const confirmedList = myBookings.filter(b => {
+        const s = String(b.status || "").toLowerCase();
+        return successfulStatuses.some(status => s.includes(status));
+      });
+  
+      // 4. CHART & REVENUE LOGIC
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const revenueMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
       
@@ -76,13 +89,22 @@ const TravelAgentDashboard = () => {
       setDynamicChartData(days.map(day => ({ name: day, rev: revenueMap[day] })));
       setTotalRevenue(confirmedList.reduce((acc, curr) => acc + (Number(curr.totalPrice) || 0), 0));
       
+      // 5. TRIP STATS (Sync with the new filtering)
       setTripStats({
-        total: allBookings.length,
-        // Use the updated confirmedList length here
+        total: myBookings.length,
         confirmed: confirmedList.length, 
-        processing: allBookings.filter(b => String(b.status || "").toLowerCase().includes('pend')).length,
-        canceled: allBookings.filter(b => String(b.status || "").toLowerCase().includes('cancel')).length
+        processing: myBookings.filter(b => String(b.status || "").toLowerCase().includes('pend')).length,
+        canceled: myBookings.filter(b => String(b.status || "").toLowerCase().includes('cancel')).length
       });
+  
+      // 6. RATING LOGIC
+      const fbData = feedbackRes.data?.feedbacks || feedbackRes.data || [];
+      if (fbData.length > 0) {
+        const total = fbData.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
+        setAvgRating((total / fbData.length).toFixed(1));
+      } else {
+        setAvgRating("0.0");
+      }
   
     } catch (err) { 
       console.error("Dashboard Sync Error:", err); 
@@ -90,7 +112,6 @@ const TravelAgentDashboard = () => {
       setLoading(false); 
     }
   }, []);
-
   useEffect(()=> {
     fetchDashboardData();
   }, [fetchDashboardData]);
@@ -167,8 +188,8 @@ const TravelAgentDashboard = () => {
             stats={{
                 totalPackages: packages.length,
                 totalBookings: tripStats.total,
-                revenue: `Rs. ${totalRevenue.toLocaleString()}`,
-                rating: "4.8",
+                revenue: ` ${totalRevenue.toLocaleString()}`,
+                rating: avgRating,
                 notifications: tripStats.processing
             }}
             loading={loading}
@@ -176,47 +197,47 @@ const TravelAgentDashboard = () => {
 
         {/* --- REVENUE TRENDS --- */}
         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm mb-8 mt-6">
-          <div className="flex justify-between items-center mb-8">
-            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-              <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
-              Revenue Trends
-            </h3>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Last 7 Days</span>
-          </div>
-          
-          <div style={{ width: '100%', height: 320 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dynamicChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} 
-                    dy={10} 
-                />
-                <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} 
-                    tickFormatter={(v) => `Rs.${v}`} 
-                />
-                <Tooltip 
-                    formatter={(value) => [`Rs. ${value}`, "Revenue"]}
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
-                />
-                <Line 
-                    type="monotone" 
-                    dataKey="rev" 
-                    stroke="#3b82f6" 
-                    strokeWidth={4} 
-                    dot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }} 
-                    activeDot={{ r: 8, strokeWidth: 0 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+  <div className="flex justify-between items-center mb-8">
+    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+      <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
+      Revenue Trends
+    </h3>
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Last 7 Days</span>
+  </div>
+  
+  {/* FIX: Add a specific height and min-width to the container */}
+  <div style={{ width: '100%', height: '350px', minWidth: '0' }}>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={dynamicChartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis 
+            dataKey="name" 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} 
+            dy={10} 
+        />
+        <YAxis 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} 
+            tickFormatter={(v) => `Rs.${v}`} 
+        />
+        <Tooltip 
+            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
+        />
+        <Line 
+            type="monotone" 
+            dataKey="rev" 
+            stroke="#3b82f6" 
+            strokeWidth={4} 
+            dot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }} 
+            activeDot={{ r: 8, strokeWidth: 0 }} 
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
         {/* --- TRIP STATUS BAR --- */}
         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm flex items-center gap-10">

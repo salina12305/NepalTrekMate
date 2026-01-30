@@ -9,6 +9,7 @@ const User = require("./models/usermodel");
 const Package = require("./models/packagemodel"); 
 const Wishlist = require("./models/wishlistmodel");
 const Booking = require("./models/bookingmodel");
+const Feedback = require("./models/feedbackmodel");
 
 const app = express();
 
@@ -27,8 +28,8 @@ app.use('/uploads', express.static('public/uploads'));
 app.use("/api/user",require('./routes/userroutes'))
 app.use("/api/packages", require('./routes/packageroutes')); 
 app.use("/api/wishlist", require('./routes/wishlistRoutes'));
-app.use("/api/bookings", require('./routes/bookingroutes'));
-
+app.use("/api/feedback", require('./routes/feedbackroutes'));
+app.use('/api/bookings', require('./routes/bookingroutes'));
 app.get("/",(req,res)=>{
     res.json({message:"Welcome to the Home Page"});
 });
@@ -45,25 +46,34 @@ User.hasMany(Wishlist, { foreignKey: 'userId' });
 Wishlist.belongsTo(User, { foreignKey: 'userId' });
 
 // Relationships for Booking
+// 1. The Traveler (User) who made the booking
 User.hasMany(Booking, { foreignKey: 'userId' });
 Booking.belongsTo(User, { foreignKey: 'userId' });
 
+// 2. The Package being booked
 Package.hasMany(Booking, { foreignKey: 'packageId' });
 Booking.belongsTo(Package, { foreignKey: 'packageId' });
 
-// models/index.js
-Booking.belongsTo(User, { foreignKey: 'userId' });
-Booking.belongsTo(Package, { foreignKey: 'packageId' });
-User.hasMany(Booking, { foreignKey: 'userId' });
-Package.hasMany(Booking, { foreignKey: 'packageId' });
-
-// A booking belongs to a traveler (User)
-Booking.belongsTo(User, { foreignKey: 'userId' });
-
-// A booking belongs to a guide (also a User)
-Booking.belongsTo(User, { foreignKey: 'guideId', as: 'guide' });
+// 3. The Guide assigned to the booking (Aliased as 'guide')
 User.hasMany(Booking, { foreignKey: 'guideId', as: 'guidedMissions' });
+Booking.belongsTo(User, { foreignKey: 'guideId', as: 'guide' }); 
 
+// 4. Feedback links
+Booking.hasMany(Feedback, { foreignKey: 'bookingId' });
+Feedback.belongsTo(Booking, { foreignKey: 'bookingId' });
+
+Feedback.belongsTo(User, { foreignKey: 'userId' }); // The traveler who wrote it
+Feedback.belongsTo(Booking, { foreignKey: 'bookingId' });
+Booking.hasMany(Feedback, { foreignKey: 'bookingId' });
+
+
+// Feedback written by Traveler
+User.hasMany(Feedback, { foreignKey: 'userId', as: 'travelerReviews' });
+Feedback.belongsTo(User, { foreignKey: 'userId', as: 'customer' }); 
+
+// Feedback received by Guide
+User.hasMany(Feedback, { foreignKey: 'guideId', as: 'guideReviews' });
+Feedback.belongsTo(User, { foreignKey: 'guideId', as: 'guide' });
 const PORT = 3000;
 
 const startServer = async () => {
