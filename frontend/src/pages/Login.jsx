@@ -46,7 +46,7 @@ export default function Login() {
           return toast.error("Login worked, but no token was received.");
         }
 
-        localStorage.setItem("token-37c", token);
+        localStorage.setItem("token", token);
         
         if (response.data.user && response.data.user.id) {
           localStorage.setItem("userId", response.data.user.id);

@@ -40,6 +40,7 @@ const Homepage = () => {
         </div>
         <nav style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>Home</Link>
+          <Link to="/about" style={{ ...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF' }}>About</Link>
           <Link to="/login" style={{ ...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF' }}>Login</Link>
           <Link to="/register" style={registerButtonStyle}>Sign Up</Link>
         </nav>
