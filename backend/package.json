@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "nodemon index.js",
+  "dev": "nodemon index.js",
+  "test": "NODE_ENV=test jest --detectOpenHandles --runInBand"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -24,6 +25,7 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "jest": "^30.0.4",
+    "supertest": "^7.1.3"
   }
 }

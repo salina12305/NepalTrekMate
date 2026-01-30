@@ -43,7 +43,9 @@ router.delete("/admin/delete-user/:id", adminDeleteUser);
 router.put('/approve-user/:id',authGuard, approveUser);
 router.get('/pending-requests',authGuard, getPendingRequests);
 router.delete('/reject-user/:id',authGuard,rejectUser);
+
 router.post('/upload-profile', upload.single('profileImage'), uploadProfileImage);
+
 router.use('/packages', packageroutes);
 router.get("/get_all_guides", async (req, res) => {
   try {
@@ -53,6 +55,6 @@ router.get("/get_all_guides", async (req, res) => {
     res.status(500).json({ message: "Error fetching guides", error });
   }
 });
-router.get('/guide-stats', authGuard, bookingController.getGuideStats);
 
+router.get('/guide-stats', authGuard, bookingController.getGuideStats);
 module.exports=router;

@@ -72,19 +72,44 @@ Feedback.belongsTo(User, { foreignKey: 'userId', as: 'customer' });
 // Feedback received by Guide
 User.hasMany(Feedback, { foreignKey: 'guideId', as: 'guideReviews' });
 Feedback.belongsTo(User, { foreignKey: 'guideId', as: 'guide' });
-const PORT = 3000;
+// const PORT = 3000;
+
+// const startServer = async () => {
+//     try{
+//        await connectDB();
+//        await sequelize.sync({ alter: true });
+
+//        app.listen(PORT, ()=>{
+//            console.log(`Server is running on port ${PORT}`);
+//        });
+//     }catch (error){
+//         console.error("Failed to start server:", error);
+//     }
+// };
+
+// startServer();
+
+// for test
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
-    try{
+    try {
        await connectDB();
        await sequelize.sync({ alter: true });
 
-       app.listen(PORT, ()=>{
-           console.log(`Server is running on port ${PORT}`);
-       });
-    }catch (error){
+       if (process.env.NODE_ENV !== 'test') {
+           app.listen(PORT, () => {
+               console.log(`Server is running on port ${PORT}`);
+           });
+       }
+    } catch (error) {
         console.error("Failed to start server:", error);
     }
 };
 
-startServer();
+// Only run server if not testing
+if (process.env.NODE_ENV !== 'test') {
+    startServer();
+}
+
+module.exports = app;
