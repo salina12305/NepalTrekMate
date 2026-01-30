@@ -7,61 +7,48 @@ const addUser = async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
 
+        // Validation
         if (!fullName || !email || !password || !role) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
         const existingEmail = await User.findOne({ where: { email } });
         if (existingEmail) {
-            return res.status(400).json({ message: "Email already in use" });
+            return res.status(400).json({ success: false, message: "Email already in use" });
         }
 
-        if (role === "admin") {
-            const existingAdmin = await User.findOne({ where: { role: "admin" } });
-            if (existingAdmin) {
-                return res.status(400).json({
-                    message: "Admin account already exists. Only one admin is allowed."
-                });
-            }
-        }
-        const initialStatus = (role === 'travelagent') 
-            ? 'pending' 
-            : 'approved';
-
+        const initialStatus = (role === 'travelagent') ? 'pending' : 'approved';
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log(hashedPassword)
        
         const newUser = await User.create({
-            fullName: fullName, 
+            fullName, 
             email,
             password: hashedPassword,
             role,
             status: initialStatus
         });
-        res.status(201).json({
-            success: true,
-            id: newUser.id,
-            message: "User registered! Now upload your photo."
-        });
+
         const successMessage = (initialStatus === 'pending')
             ? "Registration submitted. Please wait for Admin approval."
             : "User registered successfully!";
 
-            res.status(201).json({
-                success: true,
-                message: successMessage,
-                user: {
-                    id: newUser.id,
-                    role: newUser.role,
-                    status: newUser.status 
-                }
-            });
+        // Single response only
+        return res.status(201).json({
+            success: true,
+            message: successMessage,
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                role: newUser.role,
+                status: newUser.status 
+            }
+        });
 
-        } catch (error) {
-            console.error("Error in addUser:", error); 
-            res.status(500).json({ message: "Error adding user" });
-        }
-    };
+    } catch (error) {
+        console.error("Error in addUser:", error); 
+        return res.status(500).json({ success: false, message: "Error adding user" });
+    }
+};
 
 const getAllUsers = async (req, res) => {
     try {
@@ -146,16 +133,16 @@ const updateUser = async (req, res) => {
         });
         return res.status(200).json({
             message: "Users update successfully",
-            users,
+            user,
         });
 
-        return res.status(200).json({ 
-            success:true,
-            message: "User updated successfully" ,
-            user: {
-                id:user.id
-            },
-        }); 
+        // return res.status(200).json({ 
+        //     success:true,
+        //     message: "User updated successfully" ,
+        //     user: {
+        //         id:user.id
+        //     },
+        // }); 
     }
     }   catch (error) {
           return res.status(500).json({
