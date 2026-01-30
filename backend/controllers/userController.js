@@ -315,7 +315,6 @@ const resetPassword = async (req, res) => {
             return res.status(400).json({ message: "Token and new password are required" });
         }
 
-        // 1. Find the user with the matching token AND ensure it hasn't expired
         const user = await User.findOne({
             where: {
                 verificationToken: token,

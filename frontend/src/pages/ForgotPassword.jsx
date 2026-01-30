@@ -4,11 +4,19 @@ import { forgotPasswordApi } from "../services/api";
 import toast from "react-hot-toast"; 
 
 export default function ForgotPassword() {
+  // State to hold the user's email input
   const [email, setEmail] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      /**
+       * The API call sends the email to the backend.
+       * The backend should:
+       * 1. Check if the user exists.
+       * 2. Generate a unique, time-sensitive token.
+       * 3. Send an email with a link like: /reset-password/TOKEN_HERE
+       */
       const res = await forgotPasswordApi({ email });
       if (res.status === 200) {
         toast.success("Reset link sent! Please check your email.");
@@ -20,7 +28,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen w-full bg-white flex flex-col font-sans">
-      
+      {/* HEADER / LOGO SECTION */}
       <nav className="w-full flex items-center p-6">
         <div className="flex items-center gap-2">
           <img src="/logo.png" 
@@ -32,7 +40,7 @@ export default function ForgotPassword() {
           </span>
         </div>
       </nav>
-
+      {/* FORM CONTAINER */}
       <div className="flex-grow flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-white border border-gray-100 shadow-2xl rounded-3xl p-10">
  
@@ -57,7 +65,7 @@ export default function ForgotPassword() {
               No worries! Enter the email address associated with your account and we'll send a reset link.
             </p>
           </div>
-
+          {/* MAIN FORM */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -82,7 +90,7 @@ export default function ForgotPassword() {
           </form>
 
           <div className="mt-8 text-center">
-
+            {/* NAVIGATION BACK */}
             <Link 
               to="/login" 
               className="text-sm font-bold text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1"

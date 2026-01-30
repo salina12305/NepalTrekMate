@@ -129,7 +129,6 @@ const AdminPackages = () => {
   };
 
     // --- ACTION HANDLERS ---
-    // --- UPDATED ACTION HANDLER ---
   const handleDelete = (id) => {
     // Stage 1: The UI Confirmation Toast
     toast((t) => (

@@ -112,7 +112,6 @@ const EditPackage = () => {
         console.log("Request Setup Error:", err.message);
         toast.error(err.message);
     }
-    // REMOVED: toast.error(message); <--- This was causing the crash
   } finally {
     setLoading(false);
   }

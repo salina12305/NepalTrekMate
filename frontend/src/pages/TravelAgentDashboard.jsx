@@ -197,47 +197,47 @@ const TravelAgentDashboard = () => {
 
         {/* --- REVENUE TRENDS --- */}
         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm mb-8 mt-6">
-  <div className="flex justify-between items-center mb-8">
-    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-      <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
-      Revenue Trends
-    </h3>
-    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Last 7 Days</span>
-  </div>
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
+              Revenue Trends
+            </h3>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Last 7 Days</span>
+          </div>
   
-  {/* FIX: Add a specific height and min-width to the container */}
-  <div style={{ width: '100%', height: '350px', minWidth: '0' }}>
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={dynamicChartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis 
-            dataKey="name" 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} 
-            dy={10} 
-        />
-        <YAxis 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} 
-            tickFormatter={(v) => `Rs.${v}`} 
-        />
-        <Tooltip 
-            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
-        />
-        <Line 
-            type="monotone" 
-            dataKey="rev" 
-            stroke="#3b82f6" 
-            strokeWidth={4} 
-            dot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }} 
-            activeDot={{ r: 8, strokeWidth: 0 }} 
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-</div>
+          {/* FIX: Add a specific height and min-width to the container */}
+          <div style={{ width: '100%', height: '350px', minWidth: '0' }}>
+            <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dynamicChartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis 
+              dataKey="name" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} 
+              dy={10} 
+           />
+           <YAxis 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} 
+              tickFormatter={(v) => `Rs.${v}`} 
+           />
+           <Tooltip 
+              contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
+           />
+            <Line 
+              type="monotone" 
+              dataKey="rev" 
+              stroke="#3b82f6" 
+              strokeWidth={4} 
+              dot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }} 
+              activeDot={{ r: 8, strokeWidth: 0 }} 
+            />
+            </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
         {/* --- TRIP STATUS BAR --- */}
         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm flex items-center gap-10">

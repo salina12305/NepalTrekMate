@@ -13,6 +13,7 @@ import { Star, MessageSquare, ThumbsUp, User, Trash2, AlertTriangle } from 'luci
 import toast from "react-hot-toast";
 
 const TravelAgentFeedback = () => {
+  // --- STATE MANAGEMENT ---
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -29,6 +30,11 @@ const TravelAgentFeedback = () => {
     return `${baseUrl}/${path.replace(/\\/g, '/')}`;
   };
 
+  /**
+   * DATA SYNCHRONIZATION
+   * Uses Promise.allSettled to ensure that if one API fails (e.g., Bookings), 
+   * the Feedback list can still render.
+   */
   useEffect(() => {
     const loadAllData = async () => {
       const userId = localStorage.getItem('userId');
@@ -49,24 +55,24 @@ const TravelAgentFeedback = () => {
             setPackagesCount(pData.length);
         }
 
-        if (bookingRes.status === 'fulfilled') {
+        if (
+          bookingRes.status === 'fulfilled') {
             const rawData = bookingRes.value.data.data || bookingRes.value.data.bookings || [];
             const myBookings = rawData.filter(b => {
-                const bId = b.agentId || b.agent?._id || b.agent;
-                const pId = b.Package?.agentId || b.Package?.agent?._id;
-                return String(bId) === String(userId) || String(pId) === String(userId);
+              const bId = b.agentId || b.agent?._id || b.agent;
+              const pId = b.Package?.agentId || b.Package?.agent?._id;
+              return String(bId) === String(userId) || String(pId) === String(userId);
             });
             setBookings(myBookings);
-        }
+          }
 
-        if (feedbackRes.status === 'fulfilled') {
+          if (feedbackRes.status === 'fulfilled') {
             // This now receives ONLY tour reviews (where guideId is null) from your updated backend
             setFeedbacks(feedbackRes.value.data.feedbacks || []);
-        } else {
+          } else {
             toast.error("Could not load reviews");
-        }
-        
-      } catch (err) {
+          }
+        } catch (err) {
         console.error("General loading error:", err);
       } finally {
         setLoading(false);
@@ -75,19 +81,27 @@ const TravelAgentFeedback = () => {
     loadAllData();
   }, [navigate]);
 
+  // Business Logic: Defines which booking statuses qualify for stats
   const isSuccessful = (status) => ['confirmed', 'completed', 'finished'].includes(String(status).toLowerCase());
 
+  /**
+   * DELETE HANDLER
+   * Performs an optimistic UI update after a successful server deletion.
+   */
   const handleDelete = async () => {
     try {
-        await deleteAgentFeedbackApi(deleteModal.id); 
-        toast.success("Review removed");
-        setFeedbacks(feedbacks.filter(f => f.id !== deleteModal.id));
+      await deleteAgentFeedbackApi(deleteModal.id); 
+      toast.success("Review removed");
+    setFeedbacks(feedbacks.filter(f => f.id !== deleteModal.id));
         setDeleteModal({ show: false, id: null });
     } catch (err) {
-        toast.error("Failed to delete review");
+      toast.error("Failed to delete review");
     }
   };
 
+  /**
+   * ANALYTICS: Average Rating Calculation
+   */
   const avgRating = feedbacks.length > 0 
     ? (feedbacks.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0) / feedbacks.length).toFixed(1)
     : "0.0";
@@ -103,7 +117,7 @@ const TravelAgentFeedback = () => {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <TravelAgentSidebar type="agent" userData={userData} activeTab="Feedback" />
-      
+      {/* DELETE CONFIRMATION OVERLAY */}
       {deleteModal.show && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl">
@@ -121,6 +135,7 @@ const TravelAgentFeedback = () => {
       )}
 
       <main className="flex-1 p-8">
+        {/* Dynamic Header with Revenue and Rating Stats */}
         <TravelAgentHeaderStatCard
           title="Customer Feedback"
           subtitle="What travelers are saying about your tours"
@@ -136,6 +151,7 @@ const TravelAgentFeedback = () => {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+          {/* LEFT COLUMN: ANALYTICS SUMMARY */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm text-center">
                 <h3 className="text-slate-400 font-black uppercase text-xs tracking-widest mb-4">Average Rating</h3>
@@ -147,7 +163,7 @@ const TravelAgentFeedback = () => {
                 </div>
                 <p className="text-slate-500 font-medium">Based on {feedbacks.length} reviews</p>
             </div>
-
+            {/* Star Distribution Progress Bars */}
             <div className="bg-slate-900 p-8 rounded-[32px] text-white shadow-xl">
                 <h4 className="font-bold mb-4 flex items-center gap-2">
                     <ThumbsUp size={18} className="text-cyan-400" /> Review Distribution
@@ -170,6 +186,7 @@ const TravelAgentFeedback = () => {
             </div>
           </div>
 
+          {/* RIGHT COLUMN: RECENT REVIEWS FEED */}
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-black text-slate-800 uppercase text-sm tracking-widest px-2">Recent Tour Reviews</h3>
             {feedbacks.length > 0 ? (
@@ -182,22 +199,23 @@ const TravelAgentFeedback = () => {
                   <Trash2 size={20} />
                 </button>
                   <div className="flex gap-4">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100">
-  {item.userPhoto ? (
-    <img 
-      src={formatImageUrl(item.userPhoto)} 
-      alt={item.customerName || "user"} 
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        e.target.onerror = null; 
-        // Generates a backup letter avatar if the file is physically missing on the server
-        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customerName || 'T')}&background=random`;
-      }}
-    />
-  ) : ( 
-    <User className="text-slate-300" /> 
-  )}
-</div>
+                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100">
+                    {item.userPhoto ? (
+                    <img 
+                      src={formatImageUrl(item.userPhoto)} 
+                      alt={item.customerName || "user"} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        // Generates a backup letter avatar if the file is physically missing on the server
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customerName || 'T')}&background=random`;
+                      }}
+                    />
+                   ) : ( 
+                     <User className="text-slate-300" /> 
+                    )}
+                   </div>
+
                     <div className="flex-1">
                       <div className="flex justify-between">
                         <h4 className="font-black text-slate-800">{item.customerName || "Traveler"}</h4>
@@ -214,9 +232,10 @@ const TravelAgentFeedback = () => {
                 </div>
               ))
             ) : (
+              /* EMPTY STATE */
               <div className="text-center py-20 bg-white border-2 border-dashed border-slate-200 rounded-[40px]">
-                  <MessageSquare size={48} className="mx-auto text-slate-200 mb-4" />
-                  <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No tour reviews yet</p>
+                <MessageSquare size={48} className="mx-auto text-slate-200 mb-4" />
+                <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No tour reviews yet</p>
               </div>
             )}
           </div>

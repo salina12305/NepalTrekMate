@@ -6,10 +6,11 @@ import toast from "react-hot-toast";
 
 const AddPackageForm = () => {
   const navigate = useNavigate();
+  // State Management
   const [userData, setUserData] = useState(null); 
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null); 
-  const [preview, setPreview] = useState(null);  
+  const [imageFile, setImageFile] = useState(null); // Stores the actual File object
+  const [preview, setPreview] = useState(null);     // Stores the local URL for the UI preview
   
   const [formData, setFormData] = useState({
     packageName: '',
@@ -19,6 +20,7 @@ const AddPackageForm = () => {
     durationDays: '',
   });
 
+  // Fetch agent details on mount to populate the sidebar/context
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -34,15 +36,17 @@ const AddPackageForm = () => {
     fetchUserData();
   }, []);
 
+  // Update text input fields dynamically
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle file selection and generate a temporary preview URL
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setPreview(URL.createObjectURL(file)); 
+      setPreview(URL.createObjectURL(file));  // Creates a blob:http://... link
     }
   };
 
@@ -50,26 +54,31 @@ const AddPackageForm = () => {
     e.preventDefault();
     console.log("File to be uploaded:", imageFile); 
 
+    // Validation: Ensure image is present before hitting the API
     if (!imageFile) {
-        return toast.error("Please select an image file first");
+      return toast.error("Please select an image file first");
     }
 
+    /**
+     * Why FormData? 
+     * Standard JSON cannot carry File objects. FormData sets the 
+     * 'Content-Type' to 'multipart/form-data' automatically.
+     */
     const data = new FormData();
-
     data.append('packageName', formData.packageName);
     data.append('description', formData.description);
     data.append('destination', formData.destination);
     data.append('price', formData.price);
     data.append('durationDays', formData.durationDays);
     data.append('agentId', localStorage.getItem('userId'));
-    
-    // 2. The File (MUST match upload.single('packageImage'))
+    // IMPORTANT: The key 'packageImage' must match the backend middleware:
+    // e.g., upload.single('packageImage')
     data.append('packageImage', imageFile);
     try {
         const res = await createPackageApi(data);
         if (res.data.success) {
-            toast.success("Package Created!");
-            navigate('/agentpackages');
+          toast.success("Package Created!");
+          navigate('/agentpackages');
         }
     } catch (err) {
         console.error("Upload Error:", err.response?.data);
@@ -113,6 +122,7 @@ const AddPackageForm = () => {
                 </div>
               </div>
 
+              {/* Form Fields */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Package Name</label>
                 <input type="text" name="packageName" required onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500" />

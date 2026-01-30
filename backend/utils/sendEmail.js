@@ -3,10 +3,10 @@ const nodemailer = require("nodemailer");
 const sendEmail = async (email, subject, htmlContent) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "Gmail", // Or your preferred service
+      service: "Gmail", 
       auth: {
         user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_PASS, // Your App Password (not your regular password)
+        pass: process.env.EMAIL_PASS, // Your App Password 
       },
     });
 

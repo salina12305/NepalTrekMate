@@ -1,5 +1,5 @@
 const {DataTypes}=require("sequelize");
-const {sequelize}= require("../database/database"); // Your DB config
+const {sequelize}= require("../database/database"); 
 
 const Wishlist = sequelize.define('Wishlist', {
     id: {

@@ -7,6 +7,7 @@ import { User, ShieldCheck, Mail, Briefcase } from 'lucide-react';
 import toast from "react-hot-toast";
 
 const TravelAgentGuide = () => {
+  // --- STATE ---
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [guides, setGuides] = useState([]);
@@ -15,6 +16,11 @@ const TravelAgentGuide = () => {
   const [avgRating, setAvgRating] = useState("0.0");
   const navigate = useNavigate();
 
+  /**
+   * DATA AGGREGATION
+   * This is a "Heavy Lift" effect. It fetches 5 different data streams simultaneously
+   * to build a comprehensive dashboard view for the agent.
+   */
   useEffect(() => {
     const loadPageData = async () => {
       const userId = localStorage.getItem('userId');
@@ -29,14 +35,14 @@ const TravelAgentGuide = () => {
           getAllUsersApi(),
           getAgentFeedbackApi(userId) 
         ]);
-
+        // 1. Agent Profile Data
         if (userRes.status === 'fulfilled') setUserData(userRes.value.data);
-        
+        // 2. Package Count for Stats
         if (pkgRes.status === 'fulfilled') {
           const pData = pkgRes.value.data.packages || pkgRes.value.data || [];
           setPackagesCount(pData.length);
         }
-
+        // 3. Booking Logic: Filter bookings to find those belonging to this Agent
         if (bookingRes.status === 'fulfilled') {
           const rawData = bookingRes.value.data.data || bookingRes.value.data.bookings || bookingRes.value.data || [];
 
@@ -44,15 +50,15 @@ const TravelAgentGuide = () => {
             const bId = b.agentId || b.agent?._id || b.agent;
             const pId = b.Package?.agentId || b.package?.agentId || b.Package?.agent?._id;
             return String(bId) === String(userId) || String(pId) === String(userId);
-        });
-        setBookings(myBookings);
-      }
-
-        if (allUsersRes.status === 'fulfilled') {
-            const allUsers = allUsersRes.value.data.users || allUsersRes.value.data || [];
-            setGuides(allUsers.filter(u => u.role === 'guide'));
+          });
+          setBookings(myBookings);
         }
-
+        // 4. Guide Filtering: Extract only 'guide' roles from the global user list
+        if (allUsersRes.status === 'fulfilled') {
+          const allUsers = allUsersRes.value.data.users || allUsersRes.value.data || [];
+          setGuides(allUsers.filter(u => u.role === 'guide'));
+        }
+        // 5. Rating Aggregation
         if (feedbackRes.status === 'fulfilled') {
             const fbData = feedbackRes.value.data.feedbacks || [];
             if (fbData.length > 0) {
@@ -70,6 +76,7 @@ const TravelAgentGuide = () => {
     loadPageData();
   }, [navigate]);
 
+  // Helper: Identifies successful business transactions
   const isSuccessful = (status) => ['confirmed', 'completed', 'finished'].includes(String(status).toLowerCase());
 
   if (loading) {
@@ -137,7 +144,7 @@ const TravelAgentGuide = () => {
                     </div>
                   </div>
                 </div>
-
+                {/* Footer: Actions */}
                 <div className="flex gap-2">
                 <button 
                   onClick={() => navigate(`/guide-profile/${guide._id || guide.id}`)} 
@@ -150,6 +157,7 @@ const TravelAgentGuide = () => {
               </div>
             ))
           ) : (
+            /* EMPTY STATE */
              <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
                <p className="text-slate-500 font-bold">No registered guides found.</p>
              </div>

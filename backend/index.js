@@ -46,7 +46,6 @@ User.hasMany(Wishlist, { foreignKey: 'userId' });
 Wishlist.belongsTo(User, { foreignKey: 'userId' });
 
 // Relationships for Booking
-// 1. The Traveler (User) who made the booking
 User.hasMany(Booking, { foreignKey: 'userId' });
 Booking.belongsTo(User, { foreignKey: 'userId' });
 
@@ -65,7 +64,6 @@ Feedback.belongsTo(Booking, { foreignKey: 'bookingId' });
 Feedback.belongsTo(User, { foreignKey: 'userId' }); // The traveler who wrote it
 Feedback.belongsTo(Booking, { foreignKey: 'bookingId' });
 Booking.hasMany(Feedback, { foreignKey: 'bookingId' });
-
 
 // Feedback written by Traveler
 User.hasMany(Feedback, { foreignKey: 'userId', as: 'travelerReviews' });

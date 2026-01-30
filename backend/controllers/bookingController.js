@@ -5,8 +5,7 @@ const User = require('../models/usermodel');
 exports.createBooking = async (req, res) => {
     try {
         const { bookingId, rating, comment } = req.body;
-        const customerId = req.user.id; // The logged-in traveler
-
+        const customerId = req.user.id; 
         const booking = await Booking.findByPk(bookingId);
         
         if (!booking) {
@@ -18,8 +17,8 @@ exports.createBooking = async (req, res) => {
             bookingId: parseInt(bookingId),
             rating: parseInt(rating),
             comment: comment,
-            customerId: customerId, // Existing field
-            userId: customerId,     // FIX: Added this to stop the "cannot be null" error
+            customerId: customerId, 
+            userId: customerId, 
             guideId: booking.guideId || null, 
             agentId: booking.agentId || null
         });
@@ -45,7 +44,7 @@ exports.createBooking = async (req, res) => {
         const newBooking = await Booking.create({
             userId,
             packageId,
-            guideId, // SAVING THE SELECTED GUIDE
+            guideId,
             bookingDate,
             totalPrice: calculatedPrice,
             numberOfPeople: numberOfPeople || 1,
@@ -70,7 +69,6 @@ exports.getMyBookings = async (req, res) => {
                 { 
                     model: User, 
                     as: 'guide', 
-                    // ADD 'id' HERE explicitly
                     attributes: ['id', 'fullName', 'email', 'profileImage'] 
                 }
             ],
@@ -82,20 +80,6 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
-// exports.getGuideAssignments = async (req, res) => {
-//     try {
-//         const guideId = req.user.id;
-//         const assignments = await Booking.findAll({
-//             where: { guideId: guideId },
-//             include: [
-//                 { model: Package },
-//                 { 
-//                     model: User, // This is the Traveler
-//                     attributes: ['fullName', 'profileImage'] 
-//                 }
-//             ]
-//         });
-//         res.status(200).json({ success: true, assignments });
 exports.getGuideAssignments = async (req, res) => {
     try {
         const guideId = req.user.id;
@@ -104,7 +88,7 @@ exports.getGuideAssignments = async (req, res) => {
                         include: [
                             { model: Package },
                             { 
-                                model: User, // This is the Traveler
+                                model: User, 
                                 attributes: ['fullName', 'profileImage'] 
                             }
                         ]
@@ -115,29 +99,9 @@ exports.getGuideAssignments = async (req, res) => {
     }
 };
 
-// 2. Updated to handle ID from URL (req.params)
-// exports.updateBookingStatus = async (req, res) => {
-//     try {
-//         const { id } = req.params; // Get ID from URL
-//         const { status } = req.body; // Get status from Body
-        
-//         const booking = await Booking.findByPk(id);
-//         if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
-
-//         booking.status = status.toLowerCase(); 
-//         await booking.save();
-
-//         return res.status(200).json({ success: true, message: `Status updated to ${status}` });
-//     } catch (error) {
-//         return res.status(500).json({ success: false, message: error.message });
-//     }
-// };
-
 exports.updateBookingStatus = async (req, res) => {
     try {
-        // 1. Get ID from the URL parameter (/:id)
         const { id } = req.params; 
-        // 2. Get Status from the Request Body ({status: "..."})
         const { status } = req.body;
 
         const booking = await Booking.findByPk(id);
@@ -213,12 +177,9 @@ exports.completeBooking = async (req, res) => {
     }
 };
 
-
 exports.getGuideStats = async (req, res) => {
     try {
         const guideId = req.user.id; 
-
-        // 1. Count finished trips
         const totalTrips = await Booking.count({
             where: { guideId: guideId, status: 'finished' }
         });

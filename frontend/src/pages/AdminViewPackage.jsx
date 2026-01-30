@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getPackageById, getUserById } from '../services/api';
 import AdminSidebar from './components/AdminSidebar';
 import { 
-  ArrowLeft, MapPin, Calendar, Info, 
-  ShoppingBag, Star, User, Shield, 
-  Mail, Clock, Tag 
+  ArrowLeft, MapPin, Info, 
+   Clock, Tag 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

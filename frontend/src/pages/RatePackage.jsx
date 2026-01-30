@@ -13,6 +13,7 @@ const RatePackage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // UI Validation: Ensure the user actually picked at least 1 star
     if (rating === 0) return toast.error("Please select stars");
 
     try {
@@ -40,6 +41,7 @@ const RatePackage = () => {
         <h2 className="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tighter">Rate the Tour</h2>
         <p className="text-slate-400 text-center text-sm font-medium mb-8">How was the overall trek and organization?</p>
 
+        {/* STAR RATING PICKER */}
         <div className="flex justify-center gap-2 mb-8">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -58,6 +60,7 @@ const RatePackage = () => {
           ))}
         </div>
 
+        {/* COMMENT AREA */}
         <textarea
           className="w-full bg-slate-50 border border-slate-200 rounded-3xl p-5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all h-32 mb-6"
           placeholder="What did you think of the itinerary and service?"
@@ -65,6 +68,7 @@ const RatePackage = () => {
           onChange={(e) => setComment(e.target.value)}
         />
 
+        {/* SUBMIT BUTTON */}
         <button 
           onClick={handleSubmit}
           className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg"

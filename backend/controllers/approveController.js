@@ -43,10 +43,8 @@ const rejectUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
         // We delete the record if they are rejected
         await user.destroy();
-
         res.status(200).json({ message: "Registration request rejected and removed." });
     } catch (error) {
         res.status(500).json({ message: "Rejection failed", error: error.message });

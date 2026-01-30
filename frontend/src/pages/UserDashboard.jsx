@@ -17,6 +17,11 @@ const UserDashboard = () => {
 
   const backendUrl = "http://localhost:3000";
 
+  /**
+   * 1. PARALLEL DATA FETCHING
+   * Using Promise.all ensures that the dashboard doesn't wait for one request to finish
+   * before starting the next, significantly reducing load times.
+   */
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
@@ -60,6 +65,11 @@ const UserDashboard = () => {
     }
   }, [activeTab]);
 
+  /**
+   * 2. DATA FILTERING LOGIC
+   * We categorize bookings locally to avoid extra backend calls.
+   * 'Finished' status moves a booking from 'Upcoming' to 'Past'.
+   */
   const upcomingBookings = bookings.filter(b => b.status?.toLowerCase() !== 'finished');
   const pastBookings = bookings.filter(b => b.status?.toLowerCase() === 'finished');
 
@@ -114,14 +124,6 @@ const UserDashboard = () => {
       } 
     });
   };
-
-  // HANDLER: Rate Package
-  // const handleRatePackage = (booking) => {
-  //   const packageId = booking.packageId || booking.Package?.id;
-  //   navigate(`/rate-package/${packageId}`, { 
-  //       state: { bookingId: booking.id, packageName: booking.Package?.packageName } 
-  //   });
-  // };
 
   if (loading) return <div className="h-screen flex items-center justify-center font-black text-indigo-600 animate-pulse uppercase tracking-widest">Nepal TrekMate Loading...</div>;
 

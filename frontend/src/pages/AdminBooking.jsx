@@ -16,14 +16,15 @@ const AdminBooking = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
+  // --- STATE MANAGEMENT ---
   const [bookings, setBookings] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  
   const [showNoti, setShowNoti] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [allUsersList, setAllUsersList] = useState([]);
+  // Track last notification check to highlight "new" items
   const [lastViewedTime, setLastViewedTime] = useState(
     localStorage.getItem('adminNotiLastViewed') || new Date(0).toISOString()
   );
@@ -35,17 +36,26 @@ const AdminBooking = () => {
     revenue: 0
   });
 
-  // Helper to determine if a booking should contribute to the ledger
+ /**
+   * Helper: Business Logic to filter successful transactions.
+   * Only 'confirmed' or 'completed' bookings affect the financial ledger.
+   */
   const isSuccessful = (status) => {
     const s = String(status || "").toLowerCase();
     return s.includes('confirm') || s.includes('complete') || s.includes('finish');
   };
-
+  
+  /**
+   * DATA SYNCHRONIZATION
+   * Fetches data from 5 different endpoints simultaneously to build the dashboard state.
+   * @param {boolean} isAuto - If true, suppresses the loading spinner for background refreshes.
+   */
   const fetchAllAdminData = useCallback(async (isAuto = false) => {
     if (!isAuto) setLoading(true);
     const userId = localStorage.getItem('userId');
     
     try {
+      // Execute all API calls in parallel for better performance
       const [bookingsRes, userRes, pkgRes, usersRes, pendingRes] = await Promise.all([
         getAllBookingsApi(),
         userId ? getUserById(userId) : Promise.resolve({ data: null }),
@@ -55,9 +65,8 @@ const AdminBooking = () => {
       ]);
 
       if (userRes?.data) setUserData(userRes.data);
-
-      const allBookings = bookingsRes?.data?.data || bookingsRes?.data?.bookings || bookingsRes?.data || [];
-      
+      // --- 1. Process Bookings ---
+      const allBookings = bookingsRes?.data?.data || bookingsRes?.data?.bookings || bookingsRes?.data || [];    
       // Filter for Confirmed, Completed, and Finished
       const successfulList = Array.isArray(allBookings) 
         ? allBookings.filter(b => isSuccessful(b?.status))
@@ -65,6 +74,7 @@ const AdminBooking = () => {
       
       setBookings(successfulList);
 
+      // --- 2. Calculate Revenue & User Stats ---
       const totalRevenue = successfulList.reduce((acc, curr) => acc + (Number(curr?.totalPrice) || 0), 0);
       const allUsers = usersRes?.data?.users || usersRes?.data || [];
       setAllUsersList(allUsers);
@@ -73,6 +83,7 @@ const AdminBooking = () => {
       const allPending = pendingRes?.data?.requests || pendingRes?.data || [];
       setPendingRequests(allPending);
 
+      // --- 3. Set Global Stats for Header Cards ---
       setGlobalStats({
         totalPackages: allPkgs.length,
         activeAgents: allUsers.filter(u => u?.role === 'travelagent' && u?.status === 'approved').length,
@@ -88,9 +99,12 @@ const AdminBooking = () => {
     }
   }, []);
 
+  // --- LIFECYCLE EFFECTS ---
   useEffect(() => {
     fetchAllAdminData();
+    // Auto-refresh data every 30 seconds to keep the "Ledger" live
     const interval = setInterval(() => fetchAllAdminData(true), 30000);
+    // UI: Close notification dropdown when clicking outside
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowNoti(false);
     };
@@ -101,6 +115,10 @@ const AdminBooking = () => {
     };
   }, [fetchAllAdminData]);
 
+  /**
+   * NOTIFICATION LOGIC
+   * Merges pending agent requests and new user signups (last 48 hours) into one feed.
+   */
   const notifications = [
     ...pendingRequests.map(req => ({
       id: req._id,
@@ -120,7 +138,7 @@ const AdminBooking = () => {
         icon: "✨",
         link: "/users"
       }))
-  ].sort((a, b) => new Date(b.time) - new Date(a.time));
+  ].sort((a, b) => new Date(b.time) - new Date(a.time));// Sort by newest first
 
   const unreadCount = notifications.filter(n => new Date(n.time) > new Date(lastViewedTime)).length;
 
@@ -134,6 +152,7 @@ const AdminBooking = () => {
     }
   };
 
+  // --- FILTERING ---
   const filteredBookings = bookings.filter(b => 
     b?.Package?.packageName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b?.User?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,14 +161,15 @@ const AdminBooking = () => {
   return (
     <div className="flex bg-slate-50 min-h-screen">
       <AdminSidebar userData={userData} />
-
       <main className="flex-1 p-8">
+        {/* Header Section */}
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-2xl font-black text-slate-800">Global Booking Ledger</h1>
             <p className="text-slate-500 text-sm">System-wide transaction oversight and history</p>
           </div>
-          
+
+          {/* Notification Bell with Unread Badge */}
           <div className="relative" ref={dropdownRef}>
             <button onClick={handleOpenNotifications} className="relative p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition-all z-50">
               <span className="text-xl">🔔</span>
@@ -160,6 +180,7 @@ const AdminBooking = () => {
               )}
             </button>
 
+            {/* Notification Dropdown Menu */}
             {showNoti && (
               <div className="absolute top-14 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden">
                 <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
@@ -182,6 +203,7 @@ const AdminBooking = () => {
           </div>
         </div>
 
+        {/* Global Statistics Cards */}
         <AdminHeaderStatCard
          loading={loading}
          firstCardLabel="Total Bookings" 
@@ -192,6 +214,7 @@ const AdminBooking = () => {
           revenue: globalStats.revenue 
          }}
        />
+       {/* Transaction History Table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
           <div className="p-4 bg-slate-50 flex justify-between items-center border-b">
             <h3 className="font-bold text-slate-800">Transaction History</h3>

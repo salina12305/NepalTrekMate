@@ -30,50 +30,57 @@ const GuideDashboard = () => {
       try {
         const userId = localStorage.getItem('userId');
         
-        // Using allSettled so one failing API doesn't kill the whole page
         const results = await Promise.allSettled([
           getGuideBookingsApi(),
           getGuideStatsApi(),
           getUserById(userId),
           getMyGuideReviewsApi()
         ]);
-
+  
         // 1. Handle Missions
         if (results[0].status === 'fulfilled') {
           const mRes = results[0].value;
           setMissions(mRes.data?.data || mRes.data?.assignments || []);
         }
-
-        // 2. Handle Stats
-        if (results[1].status === 'fulfilled') {
-          const sRes = results[1].value;
-          setStats({
-            totalTrips: sRes.data?.totalTrips || 0,
-            averageRating: sRes.data?.averageRating || 5.0
-          });
-        }
-
-        // 3. Handle User
+  
+        // 2. Handle User Info
         if (results[2].status === 'fulfilled') {
           const uRes = results[2].value;
           setUserData(uRes.data?.user || uRes.data);
         }
-
-        // 4. Handle Reviews (Mapping strictly to your working traveler name logic)
+  
+        // 3. Handle Reviews & Calculate Real Rating (CRITICAL STEP)
+        let calculatedAvg = 0;
         if (results[3].status === 'fulfilled') {
           const rRes = results[3].value;
           const rawFeedbacks = rRes.data?.feedbacks || [];
-          console.log("Dashboard Reviews Debug:", rawFeedbacks); // Check your console!
           
-          setReviews(rawFeedbacks.map(f => ({
+          const formattedReviews = rawFeedbacks.map(f => ({
             id: f.id,
-            rating: f.rating,
+            rating: Number(f.rating) || 0,
             comment: f.comment,
-            customerName: f.User?.fullName || "Traveler",
-            userPhoto: f.User?.profileImage
-          })));
+            customerName: f.customer?.fullName || f.User?.fullName || "Traveler",
+            userPhoto: f.customer?.profileImage || f.User?.profileImage
+          }));
+  
+          setReviews(formattedReviews);
+  
+          if (formattedReviews.length > 0) {
+            const totalScore = formattedReviews.reduce((acc, rev) => acc + rev.rating, 0);
+            calculatedAvg = (totalScore / formattedReviews.length).toFixed(1);
+          }
         }
-
+  
+        // 4. Handle Stats - Use the calculated average instead of the API average
+        if (results[1].status === 'fulfilled') {
+          const sRes = results[1].value;
+          setStats({
+            totalTrips: sRes.data?.totalTrips || 0,
+            // If calculatedAvg is > 0, use it. Otherwise, fallback to API or 0.0
+            averageRating: calculatedAvg > 0 ? calculatedAvg : (sRes.data?.averageRating || "0.0")
+          });
+        }
+  
       } catch (err) { 
         console.error("Critical Dashboard Error:", err); 
       } finally { 

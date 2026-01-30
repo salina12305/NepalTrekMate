@@ -8,6 +8,7 @@ const AdminSidebar = ({ userData }) => {
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_API_BASE_URL;
 
+  //  Profile Image 
   const getProfileImageUrl = () => {
     if (!userData?.profileImage) return "/ne.png";
     if (userData.profileImage.startsWith('http')) return userData.profileImage;

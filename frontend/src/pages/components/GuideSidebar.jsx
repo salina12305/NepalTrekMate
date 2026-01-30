@@ -8,6 +8,7 @@ const GuideSidebar = ({ userData, averageRating, totalReviews }) => {
   const navigate = useNavigate();
   const backendUrl = "http://localhost:3000";
 
+  // Profile Image
   const getProfileImageUrl = () => {
     if (!userData?.profileImage) return "/ne.png";
     if (userData.profileImage.startsWith('http')) return userData.profileImage;

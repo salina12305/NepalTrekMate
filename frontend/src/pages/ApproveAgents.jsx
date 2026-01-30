@@ -289,11 +289,11 @@ const ApproveAgents = () => {
                     Reject
                   </button>
                   <button 
-      onClick={() => navigate(`/admin/user/${agent._id || agent.id}`)}
-      className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg cursor-pointer font-bold transition-colors"
-    >
-      View Details
-    </button>
+                    onClick={() => navigate(`/admin/user/${agent._id || agent.id}`)}
+                    className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg cursor-pointer font-bold transition-colors"
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
             )

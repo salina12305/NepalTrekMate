@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt")
 
 const resetPassword = async (req, res) => {
   try {
-    //  FIXED: req.body instead of res.body
     const { token, password } = req.body;
 
     if (!token || !password) {

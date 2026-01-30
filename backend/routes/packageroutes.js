@@ -10,4 +10,5 @@ router.get('/get-agent-packages/:agentId', authGuard, addpackageController.getAg
 router.get('/getPackageById/:uid', authGuard, addpackageController.getPackageById);
 router.delete('/delete_packages/:id', authGuard, addpackageController.deletePackage);
 router.put('/update_package/:id', authGuard, upload.single('packageImage'), addpackageController.updatePackage);
+
 module.exports = router;

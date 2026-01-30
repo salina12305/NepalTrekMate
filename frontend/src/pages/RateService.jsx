@@ -5,15 +5,26 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 const RateService = () => {
+    /**
+     * 1. URL & CONTEXT PARSING
+     * id: Can be a Package ID or a Guide ID depending on the route.
+     * state: Passed via <Link state={{...}}> to provide names and booking context.
+     */
     const { id } = useParams(); 
     const { state } = useLocation();
     const navigate = useNavigate();
     
+    // 2. FORM STATE
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(0);
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    /**
+     * 3. THE "PERSONALITY" SWITCH
+     * We check the current URL path to determine if we are rating a human (Guide)
+     * or a product (Package). This affects colors, icons, and API endpoints.
+     */
     const isGuide = window.location.pathname.includes('rate-guide');
     const displayName = isGuide ? state?.guideName : state?.packageName;
 
@@ -57,10 +68,12 @@ const RateService = () => {
     return (
         <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
             <div className="max-w-xl w-full bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden">
+                {/* DYNAMIC HEADER: Changes color based on 'isGuide' */}
                 <div className={`p-10 text-white text-center relative ${isGuide ? 'bg-cyan-900' : 'bg-indigo-900'}`}>
                     <button onClick={() => navigate(-1)} className="absolute top-8 left-8 text-white/50 hover:text-white transition-colors">
                         <ChevronLeft size={24} />
                     </button>
+                    {/* ICON SWITCH: Shield for Guide, Map for Package */}
                     <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-4 mx-auto border border-white/20">
                         {isGuide ? <ShieldCheck className="text-cyan-400" /> : <Map className="text-indigo-400" />}
                     </div>
@@ -71,6 +84,7 @@ const RateService = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-10 space-y-8">
+                    {/* STAR SELECTION: Uses 'hover' state for interactive feel */}
                     <div className="flex justify-center gap-3">
                         {[1, 2, 3, 4, 5].map((star) => (
                             <button key={star} type="button" onClick={() => setRating(star)} onMouseEnter={() => setHover(star)} onMouseLeave={() => setHover(0)} className="transition-transform hover:scale-110">
@@ -78,6 +92,7 @@ const RateService = () => {
                             </button>
                         ))}
                     </div>
+                    {/* COMMENT BOX */}
                     <div className="relative">
                         <MessageSquare className="absolute top-5 left-5 text-slate-300" size={20} />
                         <textarea
@@ -88,6 +103,7 @@ const RateService = () => {
                             required
                         />
                     </div>
+                    {/* SUBMIT BUTTON: Shows loading spinner when 'submitting' is true */}
                     <button disabled={submitting} className={`w-full py-5 rounded-[24px] font-black uppercase tracking-widest text-xs text-white shadow-xl transition-all ${isGuide ? 'bg-cyan-600 shadow-cyan-100 hover:bg-cyan-700' : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'} disabled:opacity-50`}>
                         {submitting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Submit Feedback"}
                     </button>

@@ -14,8 +14,6 @@ const GuideLayout = () => {
         const userId = localStorage.getItem("userId");
         
         if (!token || !userId) return;
-
-        // Note: Change this URL to your actual Guide Profile endpoint
         const response = await axios.get(`${backendUrl}/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });

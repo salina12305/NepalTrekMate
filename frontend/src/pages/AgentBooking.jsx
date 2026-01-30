@@ -68,21 +68,17 @@ const AgentBooking = () => {
   }, []);
 
  // AgentBooking.jsx
-
-const handleStatusUpdate = async (bookingId, newStatus) => {
-  try {
-    // PASS AS TWO SEPARATE ARGUMENTS: id first, then status
-    await updateBookingStatusApi(bookingId, newStatus);
-    
-    toast.success(`Booking ${newStatus}`);
-    fetchData(); // Refresh the list
-  } catch (err) { 
-    console.error("Update error:", err);
-    toast.error("Update failed"); 
-  }
-};
-
-  
+  const handleStatusUpdate = async (bookingId, newStatus) => {
+    try {
+      // PASS AS TWO SEPARATE ARGUMENTS: id first, then status
+      await updateBookingStatusApi(bookingId, newStatus);
+      toast.success(`Booking ${newStatus}`);
+      fetchData(); // Refresh the list
+    } catch (err) { 
+      console.error("Update error:", err);
+      toast.error("Update failed"); 
+    }
+  };
 
   // Improved search logic to handle case sensitivity and nested objects
   const filteredBookings = bookings.filter(b => 

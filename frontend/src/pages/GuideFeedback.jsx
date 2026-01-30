@@ -29,9 +29,8 @@ const GuideFeedback = () => {
               rating: f.rating,
               comment: f.comment,
               packageName: f.Booking?.Package?.packageName || "Trek Expedition",
-              // CHANGE THIS: Use 'customer' instead of 'User' to match backend alias
               customerName: f.customer?.fullName || "Traveler", 
-              userPhoto: f.customer?.profileImage // Matches the 'customer' alias
+              userPhoto: f.customer?.profileImage 
             }));
             setFeedbacks(formattedFeedbacks);
         } else {
@@ -71,7 +70,6 @@ const GuideFeedback = () => {
             toast.error("Failed to delete review");
         }
     };
-
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-slate-50">
       <Loader2 className="animate-spin text-cyan-600" size={48} />
@@ -158,61 +156,60 @@ const GuideFeedback = () => {
             
             {feedbacks.length > 0 ? (
               feedbacks.map((item) => (
-<div key={item.id} className="bg-white border border-slate-100 rounded-[32px] p-7 shadow-sm hover:border-cyan-200 transition-all group relative">               <button 
-        onClick={() => setDeleteModal({ show: true, id: item.id })}
-        className="absolute top-16 right-8 p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"      >
-        <Trash2 size={18} />
-      </button>                 
-                  <div className="flex gap-6">
+                <div key={item.id} className="bg-white border border-slate-100 rounded-[32px] p-7 shadow-sm hover:border-cyan-200 transition-all group relative">               <button 
+                  onClick={() => setDeleteModal({ show: true, id: item.id })}
+                  className="absolute top-16 right-8 p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"      >
+                  <Trash2 size={18} />
+                </button>                 
+                <div className="flex gap-6">
                   <div className="w-16 h-16 bg-slate-50 rounded-[20px] flex items-center justify-center overflow-hidden border border-slate-100 shrink-0">
-  {item.userPhoto ? (
-    <img 
-      src={`${backendUrl}/${item.userPhoto.replace(/\\/g, '/').replace(/^public\//, '')}`} 
-      alt={item.customerName}
-      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-      onError={(e) => { 
-        // If this runs, it means the URL above returned a 404
-        e.target.onerror = null; 
-        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customerName)}&background=random`; 
-      }}
-    />
-  ) : (
-    <User size={30} className="text-slate-300" />
-  )}
-</div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                           <h4 className="font-black text-slate-800 text-lg leading-none mb-1">{item.customerName}</h4>
-                           <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-3">{item.packageName}</p>
-                        </div>
-                        <div className="flex text-amber-400 bg-amber-50 px-2 py-1 rounded-lg">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} fill={i < (item.rating || 5) ? "currentColor" : "none"} />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <span className="absolute -left-3 -top-1 text-4xl text-slate-100 font-serif">“</span>
-                        <p className="text-slate-600 text-sm italic font-medium relative z-10 leading-relaxed">
-                          {item.comment || "The guest did not leave a written log, but completed the expedition with you."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-24 bg-white border-2 border-dashed border-slate-200 rounded-[40px]">
-                  <MessageSquare size={48} className="mx-auto text-slate-200 mb-4" />
-                  <p className="text-slate-400 font-black uppercase text-xs tracking-widest">Your guide legacy is empty</p>
-                  <p className="text-slate-300 text-[10px] mt-2">Reviews will appear here once travelers rate your treks.</p>
-              </div>
-            )}
-          </div>
-
+                    {item.userPhoto ? (
+                      <img 
+                        src={`${backendUrl}/${item.userPhoto.replace(/\\/g, '/').replace(/^public\//, '')}`} 
+                        alt={item.customerName}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => { 
+                          // If this runs, it means the URL above returned a 404
+                          e.target.onerror = null; 
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customerName)}&background=random`; 
+                        }}
+                      />
+                ) : (
+                 <User size={30} className="text-slate-300" />
+              )}
+    </div>
+    <div className="flex-1">
+      <div className="flex justify-between items-start">
+        <div>
+          <h4 className="font-black text-slate-800 text-lg leading-none mb-1">{item.customerName}</h4>
+          <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-3">{item.packageName}</p>
         </div>
-      </main>
+          <div className="flex text-amber-400 bg-amber-50 px-2 py-1 rounded-lg">
+            {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={12} fill={i < (item.rating || 5) ? "currentColor" : "none"} />
+            ))}
+          </div>
+        </div>
+        <div className="relative">
+          <span className="absolute -left-3 -top-1 text-4xl text-slate-100 font-serif">“</span>
+          <p className="text-slate-600 text-sm italic font-medium relative z-10 leading-relaxed">
+            {item.comment || "The guest did not leave a written log, but completed the expedition with you."}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  ))
+  ) : (
+        <div className="text-center py-24 bg-white border-2 border-dashed border-slate-200 rounded-[40px]">
+          <MessageSquare size={48} className="mx-auto text-slate-200 mb-4" />
+           <p className="text-slate-400 font-black uppercase text-xs tracking-widest">Your guide legacy is empty</p>
+           <p className="text-slate-300 text-[10px] mt-2">Reviews will appear here once travelers rate your treks.</p>
+        </div>
+      )}
+    </div>
+    </div>
+    </main>
     </div>
   );
 };

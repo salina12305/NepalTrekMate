@@ -13,7 +13,8 @@ const navLinkStyle = {
 
 export default function RegistrationForm() {
   const navigate = useNavigate();
-
+  // 1. FORM STATE
+  // Initializing all fields to avoid "uncontrolled to controlled" component warnings
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -22,6 +23,7 @@ export default function RegistrationForm() {
     role: "",
   });
 
+  // 2. INPUT HANDLER
   const handleChange = (e) => {
     setFormData({
        ...formData,
@@ -29,6 +31,11 @@ export default function RegistrationForm() {
       });
   };
 
+  /**
+   * 3. CLIENT-SIDE VALIDATION
+   * Prevents unnecessary API calls by catching errors before they hit the server.
+   * Includes Regex for email and length checks for passwords.
+   */
   const validate = () => {
     if (!formData.fullName.trim()) {
       toast.error("Name is required");
@@ -61,6 +68,10 @@ export default function RegistrationForm() {
     return true;
   };
 
+  /**
+   * 4. SUBMISSION LOGIC
+   * Sends data to the backend and handles the transition to the next step (Image Upload).
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -92,7 +103,7 @@ export default function RegistrationForm() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-50 p-6">
-
+      {/* Navigation Bar */}
       <nav className="w-full flex justify-between items-center py-4 px-6 bg-white shadow-sm">
         <div className="flex items-center gap-2 text-[26px] font-bold">
           <img 
@@ -108,7 +119,7 @@ export default function RegistrationForm() {
           <Link to="/about" style={{...navLinkStyle, fontWeight: 'bold', color: '#2D7DBF'}}>About</Link>
         </div>
       </nav>
-
+      {/* Registration Card */}
       <form
         onSubmit={handleSubmit}
         noValidate

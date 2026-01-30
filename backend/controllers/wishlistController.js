@@ -4,7 +4,7 @@ const Package = require('../models/packagemodel');
 exports.toggleWishlist = async (req, res) => {
     try {
         const { packageId } = req.body;
-        const userId = req.user.id; // From your authGuard
+        const userId = req.user.id; // From authGuard
 
         const existing = await Wishlist.findOne({ where: { userId, packageId } });
 
@@ -25,7 +25,7 @@ exports.getUserWishlist = async (req, res) => {
         const wishlistItems = await Wishlist.findAll({
             where: { userId: req.user.id },
             include: [{ model: Package
-             }] // Ensure associations are set in your DB sync file
+            }] 
         });
         res.status(200).json({ success: true, data: wishlistItems });
     } catch (error) {
